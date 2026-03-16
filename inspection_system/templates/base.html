@@ -880,6 +880,7 @@
             {% endif %}
 
             {% with pname=user.profile.assigned_project.name %}
+            
             {% if user.is_superuser or '104' in pname or '108' in pname or 'ERC' in pname %}
             <div class="nav-dropdown" style="position: relative; display: inline-block;">
                 <button class="nav-link"
@@ -892,39 +893,29 @@
                 </button>
                 <div class="nav-dropdown-content"
                     style="display: none; position: absolute; top: calc(100% + 5px); left: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border-radius: 8px; border: 1px solid var(--surface-border); z-index: 1000; padding: 0.5rem; overflow: hidden;">
-
+                    
                     {% if user.is_superuser or '104' in pname and 'ERC' not in pname %}
                     <a href="{% url 'ops_104:dashboard' %}"
                         class="nav-link {% if 'ops-104' in request.path %}active{% endif %}"
-                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">104
-                        Ops</a>
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">104 Ops</a>
                     {% endif %}
 
                     {% if user.is_superuser or '108' in pname and 'ERC' not in pname %}
                     <a href="{% url 'ops_108:dashboard' %}"
                         class="nav-link {% if 'ops-108' in request.path %}active{% endif %}"
-                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">108
-                        Ops</a>
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">108 Ops</a>
                     {% endif %}
 
                     {% if user.is_superuser or 'ERC' in pname %}
-                    <div style="border-top: 1px solid var(--surface-border); margin: 4px 0;"></div>
                     <a href="{% url 'erc_104:dashboard' %}"
                         class="nav-link {% if 'erc-104' in request.path %}active{% endif %}"
-                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px;">ERC Dashboard</a>
-                    
-                    <a href="{% url 'erc_104:inspection' %}?center_id=5"
-                        class="nav-link"
-                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #64748b; font-size: 0.85rem;">- 104 ERC</a>
-                    <a href="{% url 'erc_104:inspection' %}?center_id=6"
-                        class="nav-link"
-                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #64748b; font-size: 0.85rem;">- 108 ERC</a>
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px;">ERC</a>
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
 
             <script>
-                // Add simple hover logic for the new dropdown
                 document.addEventListener('DOMContentLoaded', function () {
                     const dropdowns = document.querySelectorAll('.nav-dropdown');
                     dropdowns.forEach(dropdown => {
@@ -941,7 +932,6 @@
                     });
                 });
             </script>
-            {% endif %}
             {% endwith %}
 
             {% if user.is_superuser %}

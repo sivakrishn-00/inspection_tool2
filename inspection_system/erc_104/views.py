@@ -366,7 +366,7 @@ def perform_inspection(request):
             }
 
     context = {
-        'centers': centers,
+        'erc_centers': centers,
         'selected_center': selected_center,
         'categories': categories,
         'grid_sections': grid_sections,

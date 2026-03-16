@@ -62,13 +62,13 @@
             </div>
             <div style="padding: 1.5rem;">
                 <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Select ERC Center</label>
-                <select name="center_id" required onchange="location.href='?center_id=' + this.value"
+                <select name="center_id" required onchange="if(this.value) location.href='?center_id=' + this.value"
                     style="width: 100%; max-width: 400px; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);"
                     {% if is_readonly %}disabled{% endif %}>
                     <option value="" {% if not selected_center %}selected{% endif %} disabled>-- Choose a center --</option>
-                    {% for c in centers %}
-                    <option value="{{ c.id }}" {% if c.id == selected_center.id %}selected{% endif %}>
-                        {{c.name}}{% if c.location %} - {{ c.location }}{% endif %}</option>
+                    {% for c in erc_centers %}
+                    <option value="{{ c.id }}" {% if selected_center and c.id == selected_center.id %}selected{% endif %}>
+                        {{c.name}}{% if c.location %} ({{ c.location }}){% endif %}</option>
                     {% endfor %}
                 </select>
             </div>
