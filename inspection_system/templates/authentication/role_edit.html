@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Role: {{ role.name }} | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+        <a href="{% url 'authentication:role_list' %}" class="btn btn-outline" style="padding: 0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </a>
+        <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin: 0;">Edit Role: {{ role.name }}
+        </h1>
+    </div>
+
+    <div class="card" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+        <form method="post">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 2rem;">
+                <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-main);">
+                    RoleDetails</h2>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Role
+                        Name</label>
+                    <input type="text" value="{{ role.name }}" disabled
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); background: var(--surface-ground); color: var(--text-muted);">
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Role names cannot be
+                        changed once created.</p>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label
+                        style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Description</label>
+                    <textarea name="description" rows="3"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">{{ role.description }}</textarea>
+                </div>
+
+                <div
+                    style="margin-bottom: 1rem; display: flex; align-items: start; gap: 0.5rem; padding: 1rem; background: var(--surface-ground); border-radius: var(--radius-md);">
+                    <input type="checkbox" name="is_exclusive" id="exclusiveRole" {% if role.is_exclusive_service_access %}checked{% endif %} style="margin-top: 0.25rem;">
+                    <div>
+                        <label for="exclusiveRole"
+                            style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-main);">Limit
+                            Service Code Access</label>
+                        <span style="display: block; font-size: 0.75rem; color: var(--text-secondary);">If checked,
+                            users with this role can ONLY see unassigned service codes (Unique assignment).</span>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-bottom: 1rem; display: flex; align-items: start; gap: 0.5rem; padding: 1rem; background: var(--surface-ground); border-radius: var(--radius-md);">
+                    <input type="checkbox" name="is_single" id="singleRole" {% if role.is_single_service_code %}checked{% endif %} style="margin-top: 0.25rem;">
+                    <div>
+                        <label for="singleRole"
+                            style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-main);">Restrict
+                            to Single Service Code</label>
+                        <span style="display: block; font-size: 0.75rem; color: var(--text-secondary);">If checked,
+                            users can select ONLY ONE service code (Radio Buttons).</span>
+                    </div>
+                </div>
+
+
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <a href="{% url 'authentication:role_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

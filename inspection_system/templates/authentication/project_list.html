@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Management | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Project
+                Management</h1>
+            <p style="color: var(--text-secondary);">Manage projects and track their status.</p>
+        </div>
+        <button onclick="document.getElementById('addProjectModal').showModal()" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add New Project
+        </button>
+    </div>
+
+
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem;">Project Name</th>
+                        <th>Description</th>
+                        <th>Created At</th>
+                        <th>Team Size</th>
+                        <th style="padding-right: 1.5rem; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in projects %}
+                    <tr>
+                        <td style="padding-left: 1.5rem; font-weight: 600; color: var(--text-main);">
+                            <a href="{% url 'authentication:project_detail' p.pk %}"
+                                style="text-decoration: none; color: inherit;">
+                                {{ p.name }}
+                            </a>
+                        </td>
+                        <td style="color: var(--text-secondary);">{{ p.description|truncatewords:10|default:"-" }}</td>
+                        <td style="color: var(--text-muted);">{{ p.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge badge-info">{{ p.members.count }} Members</span>
+                        </td>
+                        <td style="text-align: right; padding-right: 1.5rem;">
+                            <a href="{% url 'authentication:project_detail' p.pk %}" class="btn btn-outline"
+                                style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                Manage
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">No projects
+                            found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Project Modal -->
+<dialog id="addProjectModal"
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white;">
+    <div
+        style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.1rem; font-weight: 600;">Add New Project</h3>
+        <button onclick="document.getElementById('addProjectModal').close()"
+            style="background: none; border: none; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form method="post" action="{% url 'authentication:project_create' %}" style="padding: 1.5rem;">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Project
+                Name</label>
+            <input type="text" name="name" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label
+                style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Description</label>
+            <textarea name="description" rows="3"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+            <button type="button" onclick="document.getElementById('addProjectModal').close()"
+                class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Project</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}

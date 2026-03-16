@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}No Project Assigned | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container"
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center;">
+    <div
+        style="width: 80px; height: 80px; background: var(--warning-bg); color: var(--warning-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+    </div>
+    <h1 style="font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem;">No Project Assigned
+    </h1>
+    <p style="color: var(--text-secondary); max-width: 500px; margin-bottom: 2rem; font-size: 1.1rem;">
+        It seems you are not assigned to any project yet. Please contact your administrator to get access to a project
+        dashboard.
+    </p>
+    <a href="{% url 'authentication:logout' %}" class="btn btn-outline">Logout</a>
+</div>
+{% endblock %}

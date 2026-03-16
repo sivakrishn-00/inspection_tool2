@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Complaints Management | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Complaints
+            Management</h1>
+        <p style="color: var(--text-secondary);">Manage and resolve issues raised during inspections.</p>
+    </div>
+
+    {% if managed_complaints %}
+    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border);">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color);">Managed Category Complaints
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem;">Tracking ID</th>
+                        <th>Category</th>
+                        <th>Vehicles</th>
+                        <th style="width: 400px;">Issues Found</th>
+                        <th>Status</th>
+                        <th style="text-align: right; padding-right: 1.5rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in managed_complaints %}
+                    <tr>
+                        <td style="padding-left: 1.5rem; font-family: monospace; font-weight: 600;">
+                            {{complaint.tracking_id }}</td>
+                        <td>{{ complaint.category.name }}</td>
+                        <td>{{ complaint.inspection.vehicle.registration_number }}</td>
+                        <td>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); white-space: pre-line;">{{ complaint.description|default:"No remarks" }}</div>
+                        </td>
+                        <td>
+                            <span
+                                class="badge {% if complaint.status == 'raised' %}badge-danger{% elif complaint.status == 'resolved' %}badge-info{% else %}badge-success{% endif %}">
+                                {{ complaint.status|title }}
+                            </span>
+                        </td>
+                        <td style="text-align: right; padding-right: 1.5rem;">
+                            {% if complaint.status == 'resolved' %}
+                            <button class="btn btn-success btn-close-issue" data-id="{{ complaint.id }}"
+                                data-remarks="{{ complaint.resolution_remarks|escapejs }}"
+                                data-proof="{{ complaint.resolution_proof.url|default:'' }}"
+                                style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Close Issue</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if assigned_complaints %}
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border);">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--info-color);">Reports for My Category</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem;">Tracking ID</th>
+                        <th>Vehicle</th>
+                        <th style="width: 400px;">Issues</th>
+                        <th>Status</th>
+                        <th style="text-align: right; padding-right: 1.5rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in assigned_complaints %}
+                    <tr>
+                        <td style="padding-left: 1.5rem; font-family: monospace; font-weight: 600;">
+                            {{complaint.tracking_id }}</td>
+                        <td>{{ complaint.inspection.vehicle.registration_number }}</td>
+                        <td>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); white-space: pre-line;">{{ complaint.description|default:"No remarks" }}</div>
+                        </td>
+                        <td>
+                            <span
+                                class="badge {% if complaint.status == 'raised' %}badge-danger{% elif complaint.status == 'resolved' %}badge-info{% else %}badge-success{% endif %}">
+                                {{ complaint.status|title }}
+                            </span>
+                        </td>
+                        <td style="text-align: right; padding-right: 1.5rem;">
+                            {% if complaint.status == 'raised' %}
+                            <button onclick="openResolveModal('{{ complaint.id }}')" class="btn btn-primary"
+                                style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Mark Resolved</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not managed_complaints and not assigned_complaints %}
+    <div class="card" style="text-align: center; padding: 4rem;">
+        <div
+            style="background: var(--surface-ground); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <h2 style="font-size: 1.5rem; color: var(--text-main); margin-bottom: 0.5rem;">No active complaints!</h2>
+        <p style="color: var(--text-secondary);">Everything looks good. No issues currently need your attention.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Resolve Modal -->
+<dialog id="resolveModal">
+    <div class="modal-header">
+        <h3 style="font-weight: 700;">Resolve Complaint</h3>
+        <button onclick="document.getElementById('resolveModal').close()"
+            style="background:none; border:none; cursor:pointer; color:var(--text-secondary);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form id="resolveForm" method="POST" enctype="multipart/form-data" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Resolution Remarks</label>
+                <textarea name="remarks" class="form-control"
+                    style="width:100%; min-height:100px; padding:0.5rem; border:1px solid var(--surface-border); border-radius:var(--radius-md);"
+                    required placeholder="Describe how the issue was resolved..."></textarea>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Proof Photo</label>
+                <input type="file" name="proof" accept="image/*" class="form-control" style="width:100%;" required>
+                <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.25rem;">A photo is required to
+                    mark the issue as resolved.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="document.getElementById('resolveModal').close()"
+                class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit Resolution</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Close Modal -->
+<dialog id="closeModal">
+    <div class="modal-header">
+        <h3 style="font-weight: 700;">Close Complaint</h3>
+        <button onclick="document.getElementById('closeModal').close()"
+            style="background:none; border:none; cursor:pointer; color:var(--text-secondary);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form id="closeForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+            <div id="subordinateEvidence"
+                style="margin-bottom: 1.5rem; padding: 1rem; background: var(--surface-ground); border-radius: var(--radius-md);">
+                <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">
+                    Subordinate Work Proof:</h4>
+                <p id="subRemarks"
+                    style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; white-space: pre-line;">
+                </p>
+                <img id="subProofImg" src="" alt="Proof"
+                    style="width: 100%; border-radius: calc(var(--radius-md) / 2); display: none; margin-top: 0.5rem; border: 1px solid var(--surface-border);">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Manager Closure Remarks</label>
+                <textarea name="remarks" class="form-control"
+                    style="width:100%; min-height:80px; padding:0.5rem; border:1px solid var(--surface-border); border-radius:var(--radius-md);"
+                    placeholder="Provide final comments before closing..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="document.getElementById('closeModal').close()"
+                class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-success">Approve & Close Issue</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    function openResolveModal(complaintId) {
+        const modal = document.getElementById('resolveModal');
+        const form = document.getElementById('resolveForm');
+        form.action = `/ops-108/complaints/resolve/${complaintId}/`;
+        modal.showModal();
+    }
+
+    function openCloseModal(complaintId, remarks, proofUrl) {
+        const modal = document.getElementById('closeModal');
+        const form = document.getElementById('closeForm');
+        form.action = `/ops-108/complaints/close/${complaintId}/`;
+
+        document.getElementById('subRemarks').textContent = remarks || "No remarks provided.";
+        const img = document.getElementById('subProofImg');
+        if (proofUrl) {
+            img.src = proofUrl;
+            img.style.display = 'block';
+        } else {
+            img.style.display = 'none';
+        }
+
+            modal.showModal();
+    }
+
+    // Attach listeners to close buttons
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-close-issue').forEach(button => {
+            button.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const remarks = this.getAttribute('data-remarks');
+                const proof = this.getAttribute('data-proof');
+                openCloseModal(id, remarks, proof);
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <style>
+        .dashboard-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1.5rem;
+            }
+
+            .dashboard-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .dashboard-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .complaint-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 4px;
+            margin-bottom: 2px;
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .complaint-tag.resolved,
+        .complaint-tag.closed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .card-dynamic {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .card-dynamic:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <div
+                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+                <span>Operations</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+                <span>Dashboard</span>
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+                {{project_name }}</h1>
+            <p style="color: var(--text-secondary);">Real-time operational overview and inspection status.</p>
+        </div>
+        <div class="dashboard-actions">
+            {% if request.user.is_superuser %}
+            <a href="{% url 'ops_108:manage_checklist' %}" class="btn btn-outline-primary"
+                style="text-decoration: none; border: 1px solid var(--primary-color); color: var(--primary-color); background: white;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Manage Checklist
+            </a>
+            {% endif %}
+            {% if is_complaint_role %}
+            <a href="{% url 'ops_108:complaint_list' %}" class="btn btn-primary" style="text-decoration: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                View Complaints
+            </a>
+            {% endif %}
+            {% if not is_complaint_role %}
+            <a href="{% url 'ops_108:inspection' %}" class="btn btn-primary" style="text-decoration: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Inspection
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+
+        {% if not is_complaint_role %}
+        <!-- Card 1: Total Vehicles -->
+        <div class="card card-dynamic"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">Total Vehicles</p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--text-main); line-height: 1.2;">
+                        {{stats.total_vehicles|default:"-" }}</h3>
+                </div>
+                <div
+                    style="width: 48px; height: 48px; border-radius: 12px; background: var(--info-bg); color: var(--info-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2">
+                        </path>
+                        <circle cx="7" cy="17" r="2"></circle>
+                        <circle cx="17" cy="17" r="2"></circle>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Total Inspections -->
+        <div class="card card-dynamic"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">Total
+                        Inspections
+                    </p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--primary-color); line-height: 1.2;">
+                        {{stats.total_inspections }}</h3>
+                </div>
+                <div
+                    style="width: 48px; height: 48px; border-radius: 12px; background: var(--primary-bg); color: var(--primary-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <polyline points="17 11 19 13 23 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Complaint Focused Cards (Shown for all or specifically for complaint roles) -->
+        <!-- Total Complaints -->
+        <div class="card card-dynamic"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">Total
+                        Complaints</p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--text-main); line-height: 1.2;">
+                        {{stats.comp_total }}</h3>
+                </div>
+                <div
+                    style="width: 48px; height: 48px; border-radius: 12px; background: var(--danger-bg); color: var(--danger-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {% if is_complaint_role %}
+        <!-- Resolved Complaints -->
+        <div class="card card-dynamic"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">Resolved
+                    </p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--success-color); line-height: 1.2;">
+                        {{stats.comp_resolved }}</h3>
+                </div>
+                <div
+                    style="width: 48px; height: 48px; border-radius: 12px; background: var(--success-bg); color: var(--success-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Complaints (Raised) -->
+        <div class="card card-dynamic"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">
+                        Pending</p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--warning-color); line-height: 1.2;">
+                        {{stats.comp_pending }}</h3>
+                </div>
+                <div
+                    style="width: 48px; height: 48px; border-radius: 12px; background: var(--warning-bg); color: var(--warning-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                        </path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if not is_complaint_role %}
+    {% if map_data %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <div class="card" style="padding: 0; overflow: hidden; height: 350px; margin-bottom: 1.5rem;">
+        <div id="map" style="width: 100%; height: 100%;"></div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+        <!-- Recent Inspections List -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div
+                style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Recent Inspections
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 1.5rem;">Vehicle No.</th>
+                            <th>Inspector</th>
+                            <th>Status</th>
+                            <th>Complaints</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inspection in recent_inspections %}
+                        <tr>
+                            <td style="padding-left: 1.5rem; font-weight: 600;">
+                                {{inspection.vehicle.registration_number|default:"-" }}</td>
+                            <td style="color: var(--text-secondary);">
+                                {{inspection.inspector.username|default:"Unknown"}}</td>
+                            <td>
+                                <span
+                                    class="badge {% if inspection.display_status == 'Raised' %}badge-danger{% else %}badge-success{% endif %}">
+                                    {{ inspection.display_status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% for issue in inspection.complaints_list %}
+                                <span
+                                    class="complaint-tag {% if 'Resolved' in issue %}resolved{% elif 'Closed' in issue %}closed{% endif %}">{{issue}}</span>
+                                {% empty %}
+                                <span style="color: var(--text-muted);">-</span>
+                                {% endfor %}
+                            </td>
+                            <td style="color: var(--text-muted);">{{ inspection.created_at|timesince
+                                }} ago</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                No inspections found for your service codes.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if is_complaint_role %}
+        <!-- Recent 5 Complaints Section -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div
+                style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Recent Complaints
+                </h3>
+                <a href="{% url 'ops_108:complaint_list' %}"
+                    style="font-size: 0.85rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">View
+                    All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 1.5rem;"> Tracking ID</th>
+                            <th>Vehicle</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in recent_complaints %}
+                        <tr>
+                            <td style="padding-left: 1.5rem; font-family: monospace; font-weight: 600;">
+                                {% if complaint.tracking_id %}
+                                {{ complaint.tracking_id }}
+                                <br><small style="color: var(--text-muted); font-weight: 400;">Internal ID:
+                                    #{{
+                                    complaint.id }}</small>
+                                {% else %}
+                                #{{ complaint.id }}
+                                {% endif %}
+                            </td>
+                            <td>{{ complaint.inspection.vehicle.registration_number }}</td>
+                            <td>{{ complaint.category.name }}</td>
+                            <td>
+                                <span
+                                    class="badge {% if complaint.status == 'raised' %}badge-danger{% else %}badge-success{% endif %}">
+                                    {{ complaint.status|title }}
+                                </span>
+                            </td>
+                            <td style="color: var(--text-muted);">{{ complaint.created_at|date:"d M
+                                Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                No recent complaints found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% if map_data %}
+{{ map_data|json_script:"map-data-json" }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var mapData = JSON.parse(document.getElementById('map-data-json').textContent);
+        if (mapData.length > 0) {
+            var map = L.map('map');
+
+            // Add OSM tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            var bounds = [];
+
+            var orangeIcon = new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            mapData.forEach(function (v) {
+                var marker = L.marker([v.lat, v.lng], { icon: orangeIcon }).addTo(map);
+                marker.bindPopup("<b>" + v.registration_number + "</b><br>" + v.service_code);
+                bounds.push([v.lat, v.lng]);
+            });
+
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+            } else {
+                map.setView([17.3850, 78.4867], 10); // Standard fallback
+            }
+
+            // Add reset view control
+            var resetControl = L.control({ position: 'topleft' });
+            resetControl.onAdd = function (map) {
+                var wrapper = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                var link = L.DomUtil.create('a', '', wrapper);
+                link.href = '#';
+                link.title = 'Reset View';
+                link.style.display = 'flex';
+                link.style.alignItems = 'center';
+                link.style.justifyContent = 'center';
+                link.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
+
+                L.DomEvent.on(link, 'click', function (e) {
+                    L.DomEvent.stopPropagation(e);
+                    L.DomEvent.preventDefault(e);
+                    if (bounds.length > 0) {
+                        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+                    } else {
+                        map.setView([17.3850, 78.4867], 10);
+                    }
+                });
+                return wrapper;
+            };
+            resetControl.addTo(map);
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

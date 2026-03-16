@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <a href="{% url 'authentication:user_list' %}"
+                style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Users
+            </a>
+            <h1 style="font-size: 2rem; font-weight: 700; color: var(--text-main);">Edit User: {{ target_user.username}}
+            </h1>
+        </div>
+    </div>
+
+    <form method="post" class="card" style="padding: 2rem;">
+        {% csrf_token %}
+
+        <!-- Basic Info Section -->
+        <h3
+            style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--surface-border);">
+            Basic Information</h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Username</label>
+                <input type="text" name="username" value="{{ target_user.username }}" required
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Email
+                    Address</label>
+                <input type="email" name="email" value="{{ target_user.email }}"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Employee
+                    ID</label>
+                <input type="text" name="emp_id" value="{{ profile.emp_id|default:'' }}"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Project</label>
+                <select name="project"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                    <option value="">-- No Project --</option>
+                    {% for p in all_projects %}
+                    <option value="{{ p.id }}" {% if profile.assigned_project and p.id == profile.assigned_project.id%}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Role</label>
+                <select name="role"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                    <option value="">-- No Role --</option>
+                    {% for r in all_roles %}
+                    <option value="{{ r.id }}" {% if profile.role and r.id == profile.role.id %}selected{% endif %}>{{r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Assigned
+                    Supervisor</label>
+                <select name="supervisor" id="supervisorSelect"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                    <option value="">-- No Supervisor Assigned --</option>
+                    <optgroup label="Admins" id="adminGroup">
+                        {% for admin_prof in admins %}
+                        <option value="{{ admin_prof.id }}" {% if profile.supervisor and admin_prof.id == profile.supervisor.id %}selected{% endif %}>{{ admin_prof.user.username }}
+                        </option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Managers" id="managerGroup">
+                        {% for manager_prof in managers %}
+                        <option value="{{ manager_prof.id }}" {% if profile.supervisor and manager_prof.id == profile.supervisor.id %}selected{% endif %}>{{ manager_prof.user.username}}
+                            (Manager)</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const roleSelect = document.querySelector('select[name="role"]');
+                const adminGroup = document.getElementById('adminGroup');
+                const managerGroup = document.getElementById('managerGroup');
+
+                function updateSupervisorDropdown() {
+                    const selectedRoleOption = roleSelect.options[roleSelect.selectedIndex];
+                    const roleName = selectedRoleOption.text.trim().toLowerCase();
+
+                    if (roleName === 'manager') {
+                        // Managers report to Admins
+                        adminGroup.style.display = '';
+                        managerGroup.style.display = 'none';
+                    } else if (roleName !== '-- no role --') {
+                        // Subordinates report to Managers
+                        adminGroup.style.display = 'none';
+                        managerGroup.style.display = '';
+                    } else {
+                        // No role selected
+                        adminGroup.style.display = '';
+                        managerGroup.style.display = '';
+                    }
+                }
+
+                roleSelect.addEventListener('change', updateSupervisorDropdown);
+                updateSupervisorDropdown(); // Initial run
+            });
+        </script>
+
+        <div id="service-code-container">
+            <h3
+                style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--surface-border);">
+                Service Code Assignment (Employee ID: {{ profile.emp_id|default:'N/A' }})</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Select specific service codes to grant this employee access to. These codes are linked to specific
+                vehicles.
+            </p>
+
+            <div
+                style="max-height: 400px; overflow-y: auto; border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: 1rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                    {% for sc in all_service_codes %}
+                    <label class="service-code-item" data-sc-id="{{ sc.id }}"
+                        style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); cursor: pointer; transition: background 0.2s;">
+                        <input type="checkbox" name="service_codes" value="{{ sc.id }}" {% if sc in profile.assigned_service_codes.all %}checked{% endif %} style="margin-top: 0.25rem;">
+                        <div>
+                            <span style="display: block; font-weight: 600; color: var(--text-main);">{{ sc.code}}</span>
+                            <span
+                                style="display: block; font-size: 0.75rem; color: var(--text-secondary);">{{sc.description|truncatechars:30}}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {{ role_data|json_script:"role-data" }}
+        {{ role_single_data|json_script:"role-single-data" }}
+        {{ allocations|json_script:"allocation-data" }}
+        {{ code_owner_map|json_script:"code-owner-map" }}
+        {{ role_rank_by_id|json_script:"role-rank" }}
+        {{ rank_to_name|json_script:"rank-to-name" }}
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const projectSelect = document.querySelector('select[name="project"]');
+                const roleSelect = document.querySelector('select[name="role"]');
+                const container = document.getElementById('service-code-container');
+                const items = document.querySelectorAll('.service-code-item');
+
+                // Role Permissions Data: {role_id: is_exclusive}
+                const roleData = JSON.parse(document.getElementById('role-data').textContent);
+
+                // Role Single Data: {role_id: is_single}
+                const roleSingleData = JSON.parse(document.getElementById('role-single-data').textContent);
+
+                // Allocation Data: {service_code_id: [role_id1, role_id2, ...]}
+                const allocationData = JSON.parse(document.getElementById('allocation-data').textContent);
+
+                function toggleContainer() {
+                    const selectedProjectText = projectSelect.options[projectSelect.selectedIndex].text.toLowerCase();
+                    const selectedRoleText = roleSelect.options[roleSelect.selectedIndex].text.toLowerCase();
+
+                    const isOpsProject = selectedProjectText.includes('104 ops') || selectedProjectText.includes('108 ops');
+                    const isComplaintRole = selectedRoleText.includes('manager') || selectedRoleText.includes('subordinate');
+
+                    if (isOpsProject && !isComplaintRole) {
+                        container.style.display = 'block';
+                    } else {
+                        container.style.display = 'none';
+                    }
+                }
+
+                function filterItems() {
+                    const selectedRoleId = roleSelect.value;
+                    const isExclusive = roleData[selectedRoleId] === true;
+                    // FIX: Ensure isSingle is read from data. undefined/null becomes false.
+                    const isSingle = roleSingleData[selectedRoleId] === true;
+
+                    // If no role, selectedRoleId might be "" or a non-integer string, 
+                    // ensure we treat it carefully. IDs in allocationData are integers.
+                    const roleIdInt = parseInt(selectedRoleId);
+
+                    items.forEach(item => {
+                        const scId = item.getAttribute('data-sc-id');
+                        // Get list of roles occupying this code (default empty array)
+                        const occupyingRoles = allocationData[scId] || [];
+
+                        const input = item.querySelector('input[name="service_codes"]');
+                        const isChecked = input.checked;
+
+                        // Check if this code is occupied by SOMEONE with the CURRENTLY SELECTED Role (excluding self)
+                        const isOccupiedBySameRole = !isNaN(roleIdInt) && occupyingRoles.includes(roleIdInt);
+
+                        // VISIBILITY: Enforce Exclusivity (One code -> One user)
+                        // If the code is taken by another user in this same role, HIDE it.
+                        if (isExclusive && isOccupiedBySameRole && !isChecked) {
+                            item.style.display = 'none';
+                        } else {
+                            item.style.display = 'flex';
+                        }
+
+                        // INPUT TYPE: Dependent on "Restrict to Single Code" setting
+                        // DM Role: isExclusive=True (Hidden), isSingle=False (Checkbox) -> OK
+                        // User Role: isExclusive=True (Hidden), isSingle=True (Radio) -> OK
+                        if (isSingle) {
+                            input.type = 'radio';
+                        } else {
+                            input.type = 'checkbox';
+                        }
+                    });
+                }
+
+                projectSelect.addEventListener('change', toggleContainer);
+                roleSelect.addEventListener('change', () => {
+                    filterItems();
+                    toggleContainer();
+                });
+
+                // Initial run
+                toggleContainer();
+                filterItems();
+            }); 
+        </script>
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px dashed var(--surface-border);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg style="width: 20px; height: 20px; color: var(--text-muted);" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Latest 5 Assignment Activities
+                </h3>
+            </div>
+
+            <div
+                style="background: var(--surface-card); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                    <thead>
+                        <tr style="background: var(--surface-ground);">
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--surface-border);">
+                                Service Code</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--surface-border);">
+                                Action</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--surface-border);">
+                                Assigned By</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--surface-border);">
+                                Date & Time</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--surface-border);">
+                                Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in assignment_history %}
+                        <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.2s;"
+                            onmouseover="this.style.background='var(--surface-ground)'"
+                            onmouseout="this.style.background='transparent'">
+                            <td style="padding: 1rem;">
+                                <span style="font-weight: 600; color: var(--primary-color);">{{
+                                    log.service_code.code}}</span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                {% if log.action == 'unassigned' %}
+                                <span
+                                    style="display: inline-flex; align-items: center; gap: 0.25rem; color: var(--danger-color); font-weight: 500;">
+                                    <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    UNASSIGNED
+                                </span>
+                                {% else %}
+                                <span
+                                    style="display: inline-flex; align-items: center; gap: 0.25rem; color: var(--success-color); font-weight: 500;">
+                                    <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    ASSIGNED
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-main);">
+                                {{ log.performed_by.username|default:"System" }}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-muted);">
+                                {{ log.timestamp|date:"M d, Y H:i:s" }}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.7;">Logged
+                                    Event</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                                <svg style="width: 48px; height: 48px; margin: 0 auto 1rem; opacity: 0.2;" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                    </path>
+                                </svg>
+                                <p>No history logs available yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+            <a href="{% url 'authentication:user_list' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

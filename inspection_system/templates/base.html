@@ -1,0 +1,1366 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inspection System{% endblock %}</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans for a modern, geometric, professional look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Corporate Palette - Premium Orange & Slate */
+            --primary-hue: 25;
+            --primary-bg: hsl(var(--primary-hue), 100%, 97%);
+            --primary-color: hsl(var(--primary-hue), 95%, 50%);
+            --primary-hover: hsl(var(--primary-hue), 100%, 45%);
+            --primary-active: hsl(var(--primary-hue), 100%, 40%);
+
+            --surface-ground: #f8fafc;
+            /* Slate 50 */
+            --surface-card: #ffffff;
+            --surface-border: #e2e8f0;
+            /* Slate 200 */
+
+            --text-main: #0f172a;
+            /* Slate 900 */
+            --text-secondary: #64748b;
+            /* Slate 500 */
+            --text-muted: #94a3b8;
+            /* Slate 400 */
+
+            --success-color: #10b981;
+            --success-bg: #ecfdf5;
+            --warning-color: #f59e0b;
+            --warning-bg: #fffbeb;
+            --danger-color: #ef4444;
+            --danger-bg: #fef2f2;
+            --info-color: #3b82f6;
+            --info-bg: #eff6ff;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--surface-ground);
+            background-image: radial-gradient(circle at top right, rgba(254, 215, 170, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at bottom left, rgba(234, 88, 12, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navigation Bar - Solid Orange Effect */
+        .navbar {
+            background-color: var(--primary-color);
+            border-bottom: 1px solid var(--primary-active);
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar-brand span span {
+            color: white !important;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+            position: relative;
+            padding: 0.25rem 0;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: white;
+            transform: scaleX(0);
+            transform-origin: bottom right;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+        /* Global Inputs Focus & Selection - Orange Theme */
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 4px var(--primary-bg) !important;
+        }
+
+        /* Dropdown Options Hover (Simulated for some browsers, mostly OS dependent but we can try) */
+        option:checked {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        ::selection {
+            background-color: var(--primary-bg);
+            color: var(--primary-active);
+        }
+
+        /* Main Content Wrapper */
+        .main-content {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Layout Utilities */
+        .container-fluid {
+            width: 100%;
+            padding: 2rem 3rem;
+            /* Extra horizontal padding for wide screens */
+            max-width: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            /* Standard constraint, can be overridden */
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Card Component */
+        .card {
+            background: var(--surface-card);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        /* Button Component */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            border: 1px solid transparent;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.25);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(249, 115, 22, 0.35);
+        }
+
+        .btn-outline {
+            background: white;
+            border-color: var(--surface-border);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            background: var(--surface-ground);
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background-color: hsl(0, 84%, 55%);
+            transform: translateY(-1px);
+        }
+
+        /* Table Component */
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: var(--surface-ground);
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        .table th:first-child {
+            border-top-left-radius: var(--radius-lg);
+            border-bottom-left-radius: var(--radius-lg);
+        }
+
+        .table th:last-child {
+            border-top-right-radius: var(--radius-lg);
+            border-bottom-right-radius: var(--radius-lg);
+        }
+
+        .table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--surface-border);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .badge-success {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+
+        .badge-info {
+            background: var(--info-bg);
+            color: var(--info-color);
+        }
+
+        .badge-warning {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background: var(--danger-bg);
+            color: var(--danger-color);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid transparent;
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-success {
+            border-left-color: var(--success-color);
+            background-color: var(--success-bg);
+            color: var(--text-main);
+        }
+
+        .alert-error,
+        .alert-danger {
+            border-left-color: var(--danger-color);
+            background-color: var(--danger-bg);
+            color: var(--text-main);
+        }
+
+        .alert-warning {
+            border-left-color: var(--warning-color);
+            background-color: var(--warning-bg);
+            color: var(--text-main);
+        }
+
+        .alert-info {
+            border-left-color: var(--info-color);
+            background-color: var(--info-bg);
+            color: var(--text-main);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--surface-card);
+            border-top: 1px solid var(--surface-border);
+            padding: 1.25rem 2rem;
+            margin-top: auto;
+            text-align: center;
+            font-weight: 400;
+            /* Ensure not bold */
+        }
+
+        /* Modal Backdrop */
+        dialog::backdrop {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Global Dialog Centering & Styling */
+        dialog {
+            margin: auto;
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            max-height: 90vh;
+            /* Fixed height constraint */
+            width: 100%;
+            max-width: 500px;
+            /* Default max-width, can be overridden */
+
+            border: none;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            background: white;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        dialog[open] {
+            display: flex;
+        }
+
+        /* Modal Structure Classes */
+        .modal-header {
+            flex-shrink: 0;
+            padding: 1rem 1.5rem;
+            /* Reduced padding */
+            border-bottom: 1px solid var(--surface-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+
+        .modal-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            /* Scroll INSIDE content */
+            padding: 1rem 1.5rem;
+            /* Reduced padding */
+        }
+
+        .modal-footer {
+            flex-shrink: 0;
+            padding: 1rem 1.5rem;
+            /* Reduced padding */
+            border-top: 1px solid var(--surface-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            background: #fafafa;
+        }
+
+
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            min-width: 320px;
+            max-width: 420px;
+            transform: translateX(120%);
+            animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .toast::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+
+        .toast-success::before {
+            background-color: var(--success-color);
+        }
+
+        .toast-error::before,
+        .toast-danger::before {
+            background-color: var(--danger-color);
+        }
+
+        .toast-warning::before {
+            background-color: var(--warning-color);
+        }
+
+        .toast-info::before {
+            background-color: var(--info-color);
+        }
+
+        /* Icon Colors */
+        .toast-success .toast-icon {
+            color: var(--success-color);
+            background: var(--success-bg);
+        }
+
+        .toast-error .toast-icon,
+        .toast-danger .toast-icon {
+            color: var(--danger-color);
+            background: var(--danger-bg);
+        }
+
+        .toast-warning .toast-icon {
+            color: var(--warning-color);
+            background: var(--warning-bg);
+        }
+
+        .toast-info .toast-icon {
+            color: var(--info-color);
+            background: var(--info-bg);
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOut {
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+
+        /* Custom Dropdown Styling */
+        .custom-select-wrapper {
+            position: relative;
+            user-select: none;
+            width: 100%;
+        }
+
+        .custom-select {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .custom-select-trigger {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: var(--text-main);
+            background: #fff;
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .custom-select-trigger:after {
+            content: '';
+            width: 0.6em;
+            height: 0.6em;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            transition: transform 0.2s ease;
+        }
+
+        .custom-select.open .custom-select-trigger {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px var(--primary-bg);
+        }
+
+        .custom-select.open .custom-select-trigger:after {
+            transform: rotate(180deg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+        }
+
+        .custom-options {
+            position: absolute;
+            display: block;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            background: #fff;
+            transition: all 0.2s ease;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-10px);
+            z-index: 100;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .custom-select.open .custom-options {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .custom-option {
+            position: relative;
+            display: block;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--surface-ground);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .custom-option:last-child {
+            border-bottom: none;
+        }
+
+        .custom-option:hover,
+        .custom-option.selected {
+            color: #fff;
+            background-color: var(--primary-color);
+        }
+
+        /* Search Input in Select */
+        .custom-select-search {
+            width: 100%;
+            padding: 0.5rem;
+            border: none;
+            border-bottom: 1px solid var(--surface-border);
+            outline: none;
+            font-size: 0.875rem;
+            background: #fafafa;
+        }
+
+        .custom-select-search:focus {
+            background: #fff;
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: white;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            .container-fluid {
+                padding: 1.5rem 1rem;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            .navbar-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--primary-color);
+                flex-direction: column;
+                padding: 1rem;
+                border-bottom: 1px solid var(--primary-active);
+                box-shadow: var(--shadow-lg);
+                gap: 0.5rem;
+                transform: translateY(-20px);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .navbar-links.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .nav-link {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                display: block;
+                border-radius: var(--radius-md);
+            }
+
+            .nav-link:hover,
+            .nav-link.active {
+                background: var(--primary-active);
+                color: white;
+            }
+
+            .nav-link::after {
+                display: none;
+            }
+
+            /* Stack specific items */
+            .navbar-links>div {
+                display: flex;
+                width: 100%;
+                justify-content: space-between;
+                padding: 0.5rem 1rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                margin-top: 0.5rem;
+                padding-top: 1rem;
+            }
+
+            /* Hide vertical divider on mobile */
+            .navbar-links>div[style*="width: 1px"] {
+                display: none;
+            }
+        }
+
+        /* Mobile Actions Wrapper */
+        .mobile-actions {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-actions {
+                display: flex;
+            }
+
+            /* Hide the desktop notification inside nav-links on mobile to avoid duplication in dropdown? 
+               User didn't explicitly ask to remove it from dropdown, but it's cleaner. 
+               However, nav-links style changes on mobile, so let's target the notification-wrapper inside it. */
+            .navbar-links .notification-wrapper {
+                display: none;
+            }
+        }
+
+        /* Dropdown Link Hover */
+        .nav-dropdown-content a:hover {
+            background-color: #f1f5f9;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Header Section -->
+    {% block header %}
+    <header class="navbar">
+        <a href="{% url 'authentication:dashboard' %}" class="navbar-brand">
+            <img src="{% static 'authentication/images/bavya.jpeg' %}" alt="Bavya Logo"
+                style="height: 32px; width: auto; border-radius: 6px;">
+            <span style="display: flex; flex-direction: column; line-height: 1.2;">
+                <span><span style="color: white !important;">Inspection</span> <span
+                        style="font-weight: 300; color: rgba(255,255,255,0.85) !important;">Tool</span></span>
+            </span>
+        </a>
+
+        {% if user.is_authenticated %}
+        <div class="mobile-actions">
+            <!-- Mobile Notification -->
+            <div class="notification-wrapper" style="position: relative;">
+                <button onclick="toggleNotifications('notification-dropdown-mobile')" class="btn-icon"
+                    style="position: relative; background: none; border: none; cursor: pointer; color: white; padding: 0.5rem;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    {% if user.profile.unread_notifications_exists %}
+                    <span
+                        style="position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger-color); border-radius: 50%; border: 2px solid white;"></span>
+                    {% endif %}
+                </button>
+
+                <div id="notification-dropdown-mobile" class="notification-dropdown"
+                    style="right: -60px; width: 300px;"> <!-- Adjust Right for mobile alignment -->
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--surface-border);">
+                        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">Notifications</span>
+                        <button onclick="markAllRead()"
+                            style="background: none; border: none; color: var(--primary-color); font-size: 0.8rem; cursor: pointer;">Mark
+                            all read</button>
+                    </div>
+                    <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+                        {% for n in user.profile.filtered_notifications|slice:":10" %}
+                        <div class="notification-item {% if not n.is_read %}unread{% endif %}" data-id="{{ n.id }}"
+                            data-link="{{ n.link|default:'' }}" onclick="handleNotificationClick(this)">
+                            <div
+                                style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.2rem;">
+                                {{ n.title }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ n.message }}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem;">{{
+                                n.created_at|timesince }} ago</div>
+                        </div>
+                        {% empty %}
+                        <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                            No notifications</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <button class="hamburger" aria-label="Toggle navigation" onclick="toggleMobileMenu()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        {% endif %}
+
+        <nav class="navbar-links" id="navbarLinks">
+            {% if user.is_authenticated %}
+            <a href="{% url 'authentication:dashboard' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+
+            {% if user.profile.role.name|lower == 'manager' or user.profile.role.name|lower == 'subordinate' or user.profile.role.name|lower == 'inspection' %}
+            <!-- Restricted Menu for Complaint Roles -->
+            <a href="{% url 'ops_104:complaint_list' %}"
+                class="nav-link {% if 'complaints' in request.path %}active{% endif %}">Complaints</a>
+            {% else %}
+            <!-- Full Menu for Admin/Inspectors -->
+            {% if user.is_superuser %}
+            <a href="{% url 'authentication:project_list' %}"
+                class="nav-link {% if 'projects' in request.path %}active{% endif %}">Projects</a>
+            <a href="{% url 'authentication:user_list' %}"
+                class="nav-link {% if 'users' in request.path %}active{% endif %}">Users</a>
+            <a href="{% url 'authentication:role_list' %}"
+                class="nav-link {% if 'roles' in request.path %}active{% endif %}">Roles</a>
+            <a href="{% url 'authentication:service_code_list' %}"
+                class="nav-link {% if 'service-codes' in request.path %}active{% endif %}">Service Codes</a>
+            {% endif %}
+
+            <a href="{% url 'authentication:vehicle_list' %}"
+                class="nav-link {% if 'vehicles' in request.path %}active{% endif %}">Vehicles</a>
+
+            {% if user.category_complaints.exists or user.assigned_complaints.exists %}
+            <a href="{% url 'ops_104:complaint_list' %}"
+                class="nav-link {% if 'complaints' in request.path %}active{% endif %}">Complaints</a>
+            {% endif %}
+
+            {% with pname=user.profile.assigned_project.name %}
+            {% if user.is_superuser or '104' in pname or '108' in pname or 'ERC' in pname %}
+            <div class="nav-dropdown" style="position: relative; display: inline-block;">
+                <button class="nav-link"
+                    style="background: none; border: none; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                    Clients
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="nav-dropdown-content"
+                    style="display: none; position: absolute; top: calc(100% + 5px); left: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border-radius: 8px; border: 1px solid var(--surface-border); z-index: 1000; padding: 0.5rem; overflow: hidden;">
+
+                    {% if user.is_superuser or '104' in pname and 'ERC' not in pname %}
+                    <a href="{% url 'ops_104:dashboard' %}"
+                        class="nav-link {% if 'ops-104' in request.path %}active{% endif %}"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">104
+                        Ops</a>
+                    {% endif %}
+
+                    {% if user.is_superuser or '108' in pname and 'ERC' not in pname %}
+                    <a href="{% url 'ops_108:dashboard' %}"
+                        class="nav-link {% if 'ops-108' in request.path %}active{% endif %}"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">108
+                        Ops</a>
+                    {% endif %}
+
+                    {% if user.is_superuser or 'ERC' in pname %}
+                    <div style="border-top: 1px solid var(--surface-border); margin: 4px 0;"></div>
+                    <a href="{% url 'erc_104:dashboard' %}"
+                        class="nav-link {% if 'erc-104' in request.path %}active{% endif %}"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px;">ERC Dashboard</a>
+                    
+                    <a href="{% url 'erc_104:inspection' %}?center_id=5"
+                        class="nav-link"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #64748b; font-size: 0.85rem;">- 104 ERC</a>
+                    <a href="{% url 'erc_104:inspection' %}?center_id=6"
+                        class="nav-link"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #64748b; font-size: 0.85rem;">- 108 ERC</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <script>
+                // Add simple hover logic for the new dropdown
+                document.addEventListener('DOMContentLoaded', function () {
+                    const dropdowns = document.querySelectorAll('.nav-dropdown');
+                    dropdowns.forEach(dropdown => {
+                        let timeout;
+                        dropdown.addEventListener('mouseenter', () => {
+                            clearTimeout(timeout);
+                            dropdown.querySelector('.nav-dropdown-content').style.display = 'block';
+                        });
+                        dropdown.addEventListener('mouseleave', () => {
+                            timeout = setTimeout(() => {
+                                dropdown.querySelector('.nav-dropdown-content').style.display = 'none';
+                            }, 100);
+                        });
+                    });
+                });
+            </script>
+            {% endif %}
+            {% endwith %}
+
+            {% if user.is_superuser %}
+            <div class="nav-dropdown" style="position: relative; display: inline-block;">
+                <button class="nav-link"
+                    style="background: none; border: none; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                    Settings
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="nav-dropdown-content"
+                    style="display: none; position: absolute; top: calc(100% + 5px); left: 0; background-color: #ffffff; min-width: 180px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border-radius: 8px; border: 1px solid var(--surface-border); z-index: 1000; padding: 0.5rem; overflow: hidden;">
+                    <a href="{% url 'authentication:reports' %}"
+                        class="nav-link {% if 'reports' in request.path %}active{% endif %}"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">Reports</a>
+
+                    <a href="{% url 'authentication:login_audit' %}"
+                        class="nav-link {% if 'login-audit' in request.path %}active{% endif %}"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">Login
+                        Audit</a>
+                        
+                    <a href="{% url 'authentication:api_management' %}"
+                        class="nav-link {% if 'api-management' in request.path %}active{% endif %}"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px; margin-bottom: 2px;">API
+                        Management</a>
+
+                    <a href="{% url 'authentication:settings_dashboard' %}"
+                        class="nav-link {% if 'settings' in request.path %}active{% endif %}"
+                        style="display: block; width: 100%; padding: 0.6rem 1rem; color: #334155; border-radius: 6px;">System
+                        Settings</a>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Notifications (Desktop) -->
+            <div class="notification-wrapper" style="position: relative;">
+                <button onclick="toggleNotifications('notification-dropdown')" class="btn-icon"
+                    style="position: relative; background: none; border: none; cursor: pointer; color: white; padding: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    {% if user.profile.unread_notifications_exists %}
+                    <span
+                        style="position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--danger-color); border-radius: 50%; border: 2px solid white;"></span>
+                    {% endif %}
+                </button>
+
+                <div id="notification-dropdown" class="notification-dropdown">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--surface-border);">
+                        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">Notifications</span>
+                        <button onclick="markAllRead()"
+                            style="background: none; border: none; color: var(--primary-color); font-size: 0.8rem; cursor: pointer;">Mark
+                            all read</button>
+                    </div>
+                    <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+                        {% for n in user.profile.filtered_notifications|slice:":10" %}
+                        <div class="notification-item {% if not n.is_read %}unread{% endif %}" data-id="{{ n.id }}"
+                            data-link="{{ n.link|default:'' }}" onclick="handleNotificationClick(this)">
+                            <div
+                                style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.2rem;">
+                                {{ n.title }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ n.message }}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem;">{{
+                                n.created_at|timesince }} ago</div>
+                        </div>
+                        {% empty %}
+                        <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                            No notifications</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.3); margin: 0 0.5rem;"></div>
+
+            <!-- User Profile Dropdown Placeholder -->
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="text-align: right; line-height: 1.2;">
+                    <span
+                        style="display: block; font-size: 0.85rem; font-weight: 600; color: white;">{{user.username|title}}</span>
+                    <span style="display: block; font-size: 0.75rem; color: rgba(255,255,255,0.85);">
+                        {% if user.profile.role %}
+                        {{ user.profile.role.name }}
+                        {% elif user.is_superuser %}
+                        System Admin
+                        {% else %}
+                        User
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <form action="{% url 'authentication:logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline"
+                    style="padding: 0.5rem; border-color: transparent; background: transparent;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="color: white;">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </form>
+            {% else %}
+            {% if request.path != '/login/' and request.path != '/' %}
+            <a href="{% url 'authentication:login' %}" class="btn"
+                style="background: white; color: var(--primary-color);">Login</a>
+            {% endif %}
+            {% endif %}
+        </nav>
+    </header>
+    {% endblock %}
+
+
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Global Toast Notifications -->
+    {% if messages %}
+    <div class="toast-container">
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+            <div class="toast-icon">
+                {% if message.tags == 'success' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                {% elif message.tags == 'error' or message.tags == 'danger' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                {% elif message.tags == 'warning' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                {% else %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                {% endif %}
+            </div>
+            <div style="flex: 1; padding-top: 0.1rem;">
+                <p style="margin: 0; font-weight: 600; font-size: 0.9rem; color: var(--text-main); line-height: 1.4;">
+                    {{ message }}</p>
+            </div>
+            <button type="button" onclick="dismissToast(this.closest('.toast'))"
+                style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block footer %}
+    <footer class="footer">
+        <div style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 400; letter-spacing: 0.02em;">
+            &copy; {% now "Y" %} Inspection Tool <span style="margin: 0 0.5rem; opacity: 0.5;">|</span> Powered by
+            <span style="color: var(--primary-color); font-weight: 500;">Bavya</span>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <script>
+        function dismissToast(toast) {
+            toast.style.animation = 'slideOut 0.4s forwards cubic-bezier(0.16, 1, 0.3, 1)';
+            setTimeout(() => {
+                toast.remove();
+            }, 400);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-dismiss toasts after 5 seconds, except warnings
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach((toast, index) => {
+                if (!toast.classList.contains('toast-warning')) {
+                    setTimeout(() => {
+                        if (document.body.contains(toast)) {
+                            dismissToast(toast);
+                        }
+                    }, 5000 + (index * 500));
+                }
+            });
+
+            // Custom Select Implementation
+            document.querySelectorAll('select').forEach(el => {
+                // Skip if already hidden or no parent
+                if (el.style.display === 'none') return;
+
+                // Create custom select wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = 'custom-select-wrapper';
+                el.parentNode.insertBefore(wrapper, el);
+                wrapper.appendChild(el);
+
+                // Hide original select
+                el.style.display = 'none';
+
+                // Create custom select container
+                const customSelect = document.createElement('div');
+                customSelect.className = 'custom-select';
+                wrapper.appendChild(customSelect);
+
+                // Create trigger (the box you click)
+                const trigger = document.createElement('div');
+                trigger.className = 'custom-select-trigger';
+
+                // Set initial text
+                const selectedOption = el.options[el.selectedIndex];
+                trigger.textContent = selectedOption ? selectedOption.textContent : 'Select...';
+                customSelect.appendChild(trigger);
+
+                // Create options container
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'custom-options';
+
+                // ADD SEARCH INPUT IF MORE THAN 5 OPTIONS
+                if (el.options.length > 5) {
+                    const searchInput = document.createElement('input');
+                    searchInput.type = 'text';
+                    searchInput.className = 'custom-select-search';
+                    searchInput.placeholder = 'Search...';
+
+                    searchInput.addEventListener('click', (e) => e.stopPropagation());
+
+                    searchInput.addEventListener('input', (e) => {
+                        const filter = e.target.value.toLowerCase();
+                        optionsDiv.querySelectorAll('.custom-option').forEach(opt => {
+                            const text = opt.textContent.toLowerCase();
+                            if (text.includes(filter)) {
+                                opt.style.display = 'block';
+                            } else {
+                                opt.style.display = 'none';
+                            }
+                        });
+                    });
+
+                    optionsDiv.appendChild(searchInput);
+                }
+
+                customSelect.appendChild(optionsDiv);
+
+                // Populate options
+                Array.from(el.options).forEach(option => {
+                    // Skip placeholder option if it has empty value and we are filtering but usually better to leave it or handle specific case
+                    if (option.value === "" && option.textContent.includes("--")) {
+                        // Optional: could handle skipping "Select..." placeholders in the list if desired
+                    }
+
+                    const customOption = document.createElement('div');
+                    customOption.className = 'custom-option';
+                    customOption.textContent = option.textContent;
+                    customOption.dataset.value = option.value;
+
+                    if (option.selected) {
+                        customOption.classList.add('selected');
+                    }
+
+                    // Option click handler
+                    customOption.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Update original select value
+                        el.value = option.value;
+                        // Trigger change event
+                        el.dispatchEvent(new Event('change'));
+
+                        // Update UI text
+                        trigger.textContent = option.textContent;
+
+                        // Update selected state styling
+                        customSelect.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+                        customOption.classList.add('selected');
+
+                        // Close dropdown
+                        customSelect.classList.remove('open');
+
+                        // Clear search if present
+                        const searchInput = optionsDiv.querySelector('.custom-select-search');
+                        if (searchInput) {
+                            searchInput.value = '';
+                            optionsDiv.querySelectorAll('.custom-option').forEach(o => o.style.display = 'block');
+                        }
+                    });
+
+                    optionsDiv.appendChild(customOption);
+                });
+
+                // Toggle dropdown visibility
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Close all other dropdowns
+                    document.querySelectorAll('.custom-select').forEach(s => {
+                        if (s !== customSelect) s.classList.remove('open');
+                    });
+                    customSelect.classList.toggle('open');
+                });
+            });
+
+            // Global click to close dropdowns
+            window.addEventListener('click', (e) => {
+                if (!e.target.closest('.custom-select-wrapper')) {
+                    document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+                }
+            });
+        });
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarLinks');
+            nav.classList.toggle('active');
+        }
+    </script>
+
+    <style>
+        .notification-dropdown {
+            position: absolute;
+            top: 120%;
+            right: 0;
+            width: 320px;
+            background: white;
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--surface-ground);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: var(--surface-ground);
+        }
+
+        .notification-item.unread {
+            background: #fff7ed;
+            border-left: 3px solid var(--primary-color);
+        }
+    </style>
+
+    <script>
+        function toggleNotifications(id) {
+            // Default to desktop dropdown if no ID provided
+            const dropdownId = id || 'notification-dropdown';
+            const dropdown = document.getElementById(dropdownId);
+
+            // Toggle the specific dropdown
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+
+            // Close other dropdowns if open (optional, but good UX)
+            // e.g., if mobile dropdown is somehow open and we click something else
+        }
+
+        // Close on outside click is tricky now with two dropdowns.
+        // Let's make it generic.
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.notification-wrapper')) {
+                document.querySelectorAll('.notification-dropdown').forEach(dd => {
+                    dd.classList.remove('show');
+                });
+            }
+        });
+
+        function markRead(id, link) {
+            fetch(`/notifications/${id}/read/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            }).then(() => {
+                if (link) window.location.href = link;
+                else location.reload();
+            });
+        }
+
+        function handleNotificationClick(element) {
+            const id = element.getAttribute('data-id');
+            const link = element.getAttribute('data-link');
+            markRead(id, link);
+        }
+
+        function markAllRead() {
+            fetch(`/notifications/read-all/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            }).then(() => location.reload());
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

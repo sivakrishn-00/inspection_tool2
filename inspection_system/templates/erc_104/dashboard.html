@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}ERC 104 Dashboard | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <style>
+        .dashboard-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1.5rem;
+            }
+
+            .dashboard-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .dashboard-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .main-content-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <div
+                style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Dashboard</span>
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+                {{project_name }}</h1>
+            <p style="color: var(--text-secondary);">Center operations and asset status.</p>
+        </div>
+        <div class="dashboard-actions">
+            {% if request.user.is_superuser %}
+            <a href="{% url 'erc_104:manage_checklist' %}" class="btn btn-outline-primary"
+                style="text-decoration: none; border: 1px solid var(--primary-color); color: var(--primary-color); background: white;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Manage Checklist
+            </a>
+            {% endif %}
+            <a href="{% url 'erc_104:inspection' %}" class="btn btn-primary" style="text-decoration: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Audit
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Total Centers -->
+        <div class="card"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">Active Centers</p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--text-main); line-height: 1.2;">
+                        {{stats.centers }}</h3>
+                </div>
+                <div
+                    style="width: 40px; height: 40px; border-radius: 10px; background: var(--info-bg); color: var(--info-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v9"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inspections Today -->
+        <div class="card"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">Audits Today</p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--text-main); line-height: 1.2;">
+                        {{stats.today }}</h3>
+                </div>
+                <div
+                    style="width: 40px; height: 40px; border-radius: 10px; background: var(--success-bg); color: var(--success-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Reports -->
+        <div class="card"
+            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 600;">Total Reports</p>
+                    <h3 style="font-size: 2rem; font-weight: 700; color: var(--text-main); line-height: 1.2;">
+                        {{stats.total_inspections }}</h3>
+                </div>
+                <div
+                    style="width: 40px; height: 40px; border-radius: 10px; background: var(--warning-bg); color: var(--warning-color); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="main-content-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+        <!-- Recent Inspections Table -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div
+                style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Recent Audits
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 1.5rem;">Center</th>
+                            <th>Auditor</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inspection in recent_inspections %}
+                        <tr>
+                            <td style="padding-left: 1.5rem; font-weight: 600;">{{ inspection.center.name }}</td>
+                            <td style="color: var(--text-secondary);">{{ inspection.inspector.username }}</td>
+                            <td><span class="badge badge-success">Submitted</span></td>
+                            <td style="color: var(--text-muted);">{{ inspection.created_at|timesince }} ago</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No
+                                recent audits.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sidebar / Status -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="card">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    Quick Stats
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                        <span style="color: var(--text-secondary);">Service Compliance</span>
+                        <span style="font-weight: 600; color: var(--success-color);">98%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                        <span style="color: var(--text-secondary);">Assets Functional</span>
+                        <span style="font-weight: 600;">95%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Defects -->
+            <div class="card">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                        </path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Recent Defects
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for defect in recent_defects %}
+                    <div style="padding-bottom: 0.75rem; border-bottom: 1px solid #f3f4f6;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">{{ defect.item.text }}</span>
+                            <span
+                                style="font-size: 0.75rem; color: var(--danger-color); font-weight: 600; text-transform: capitalize;">{{ defect.response }}</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">{{ defect.remarks|default:"No remarks"|truncatechars:40 }}</p>
+                        <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
+                            {{ defect.inspection.center.name }} &bull; {{ defect.inspection.created_at|date:"M d" }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">No defects reported recently.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

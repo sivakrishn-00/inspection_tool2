@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+
+{% block title %}Vehicles | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Vehicles
+            </h1>
+            <p style="color: var(--text-secondary);">
+                {% if user.is_superuser %}
+                Manage all vehicles in the system.
+                {% else %}
+                Viewing vehicles associated with your assigned service codes.
+                {% endif %}
+            </p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            {% if user.is_superuser %}
+            <form method="get" style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                <label for="projectFilter"
+                    style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary);">Filter:</label>
+                <select id="projectFilter" name="project_id" onchange="this.form.submit()"
+                    style="padding: 0.5rem 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); background: white;">
+                    <option value="">All Projects</option>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}" {% if selected_project == p.id|stringformat:"s" %}selected{% endif %}>
+                        {{p.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% endif %}
+
+            {% if user_is_superuser %}
+            <button onclick="document.getElementById('addVehicleModal').showModal()" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Vehicle
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem;">Registration No.</th>
+                        <th>Model</th>
+                        <th>Project</th>
+                        <th>Service Code</th>
+                        <th>District</th>
+                        <th>Status</th> <!-- Placeholder -->
+                        <th style="padding-right: 1.5rem; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vehicles %}
+                    <tr>
+                        <td style="padding-left: 1.5rem; font-weight: 600; color: var(--text-main);">
+                            {{ v.registration_number }}
+                        </td>
+                        <td style="color: var(--text-secondary);">{{ v.model_name }}</td>
+                        <td style="color: var(--text-secondary);">
+                            {% if v.project %}
+                            <span class="badge"
+                                style="background: var(--surface-hover); color: var(--text-main);">{{v.project.name }}</span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if v.service_code %}
+                            <span
+                                style="background: var(--surface-hover); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: monospace; font-weight: 600;">
+                                {{ v.service_code.code }}
+                            </span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ v.district.name|default:"-" }}
+                        </td>
+                        <td>
+                            <span class="badge badge-success">Active</span>
+                        </td>
+                        <td style="text-align: right; padding-right: 1.5rem;">
+                            {% if user_is_superuser %}
+                            <button data-url="{% url 'authentication:vehicle_edit' v.pk %}" data-id="{{ v.id }}"
+                                data-reg="{{ v.registration_number }}" data-model="{{ v.model_name }}"
+                                data-sc-id="{{ v.service_code.id|default:'' }}"
+                                data-district-id="{{ v.district.id|default:'' }}"
+                                data-project-id="{{ v.project.id|default:'' }}" data-lat="{{ v.latitude|default:'' }}"
+                                data-lng="{{ v.longitude|default:'' }}" onclick="openEditVehicleModal(this.dataset)"
+                                style="background: none; border: none; cursor: pointer; color: var(--text-secondary); margin-right: 0.5rem;"
+                                title="Edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="openLocationHistoryModal('{{ v.id }}', '{{ v.registration_number }}')"
+                                style="background: none; border: none; cursor: pointer; color: var(--text-secondary); margin-right: 0.5rem;"
+                                title="Location History">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </button>
+                            <button data-url="{% url 'authentication:vehicle_delete' v.id %}"
+                                data-name="{{ v.registration_number|escapejs }}"
+                                onclick="openDeleteModal(this.dataset.url, this.dataset.name)"
+                                style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.25rem;"
+                                title="Delete">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            {% if user.is_superuser %}
+                            No vehicles found. Add one to get started.
+                            {% else %}
+                            No vehicles found matching your assigned service codes.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if user_is_superuser %}
+<!-- Add Vehicle Modal -->
+<dialog id="addVehicleModal"
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
+    <div
+        style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.1rem; font-weight: 600;">Add New Vehicle</h3>
+        <button onclick="document.getElementById('addVehicleModal').close()"
+            style="background: none; border: none; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form method="post" action="{% url 'authentication:vehicle_list' %}" style="padding: 1.5rem;">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Registration
+                Number</label>
+            <input type="text" name="registration_number" required placeholder="e.g. V-1234"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Model
+                Name</label>
+            <input type="text" name="model_name" required placeholder="e.g. Ford Transit"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Service
+                Code</label>
+            <select name="service_code"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                <option value="">-- Select Service Code --</option>
+                {% for sc in service_codes %}
+                {% if not sc.current_vehicle %}
+                <option value="{{ sc.id }}">{{ sc.code }} - {{ sc.description|truncatechars:30 }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Project</label>
+            <select name="project_id"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                <option value="">-- No Project (Global) --</option>
+                {% for p in projects %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label
+                style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">District</label>
+            <select name="district_id"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                <option value="">-- Select District --</option>
+                {% for d in districts %}
+                <option value="{{ d.id }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Latitude</label>
+                <input type="number" step="any" name="latitude" required placeholder="e.g. 17.3850"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Longitude</label>
+                <input type="number" step="any" name="longitude" required placeholder="e.g. 78.4867"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+            <button type="button" onclick="document.getElementById('addVehicleModal').close()"
+                class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Vehicle</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Edit Vehicle Modal -->
+<dialog id="editVehicleModal"
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
+    <div
+        style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.1rem; font-weight: 600;">Edit Vehicle</h3>
+        <button onclick="document.getElementById('editVehicleModal').close()"
+            style="background: none; border: none; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form method="post" id="editVehicleForm" style="padding: 1.5rem;">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Registration
+                Number</label>
+            <input type="text" id="editReg" name="registration_number" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Model
+                Name</label>
+            <input type="text" id="editModel" name="model_name" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Service
+                Code</label>
+            <select id="editSc" name="service_code"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                <option value="">-- Select Service Code --</option>
+                {% for sc in service_codes %}
+                <option value="{{ sc.id }}" data-assigned-to="{{ sc.current_vehicle.id|default:'' }}">
+                    {{ sc.code }} - {{ sc.description|truncatechars:30 }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Project</label>
+            <select id="editProject" name="project_id"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                <option value="">-- No Project (Global) --</option>
+                {% for p in projects %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label
+                style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">District</label>
+            <select id="editDistrict" name="district_id"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                <option value="">-- Select District --</option>
+                {% for d in districts %}
+                <option value="{{ d.id }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Latitude</label>
+                <input type="number" step="any" id="editLat" name="latitude" required placeholder="Latitude"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Longitude</label>
+                <input type="number" step="any" id="editLng" name="longitude" required placeholder="Longitude"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+            <button type="button" onclick="document.getElementById('editVehicleModal').close()"
+                class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Vehicle</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="deleteModal"
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 400px; background: white; overflow: visible;">
+    <div style="padding: 1.5rem; text-align: center;">
+        <div
+            style="width: 48px; height: 48px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                </path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Delete Vehicle?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Are you sure you want to delete <span
+                id="deleteName" style="font-weight: 700; color: var(--text-main);"></span>? This action cannot be
+            undone.</p>
+
+        <form method="post" id="deleteForm" style="display: flex; gap: 1rem; justify-content: center;">
+            {% csrf_token %}
+            <button type="button" onclick="document.getElementById('deleteModal').close()" class="btn btn-outline"
+                style="width: 100%;">Cancel</button>
+            <button type="submit" class="btn"
+                style="background: #ef4444; color: white; border: none; width: 100%;">Delete</button>
+        </form>
+    </div>
+</dialog>
+
+<!-- Location History Modal -->
+<dialog id="locationHistoryModal"
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 700px; background: white;">
+    <div
+        style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.1rem; font-weight: 600;">Location History: <span id="historyVName"></span></h3>
+        <button onclick="document.getElementById('locationHistoryModal').close()"
+            style="background: none; border: none; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <div style="padding: 1.5rem; max-height: 400px; overflow-y: auto;">
+        <div id="locLoader" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Loading...</div>
+        <table class="table" id="locTable" style="display: none; width: 100%;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--surface-border);">
+                    <th style="text-align: left; padding: 1rem;">Service Code</th>
+                    <th style="text-align: left; padding: 1rem;">Lat / Long</th>
+                    <th style="text-align: left; padding: 1rem;">Date & Time</th>
+                    <th style="text-align: left; padding: 1rem;">Updated By</th>
+                </tr>
+            </thead>
+            <tbody id="locContent"></tbody>
+        </table>
+    </div>
+</dialog>
+
+<script>
+    function openDeleteModal(url, name) {
+        document.getElementById('deleteForm').action = url;
+        document.getElementById('deleteName').textContent = name;
+        document.getElementById('deleteModal').showModal();
+    }
+
+    function openEditVehicleModal(data) {
+        document.getElementById('editVehicleForm').action = data.url;
+        document.getElementById('editReg').value = data.reg;
+        document.getElementById('editModel').value = data.model;
+
+        // Filter Service Codes: Only show unassigned OR currently assigned to THIS vehicle
+        const scSelect = document.getElementById('editSc');
+        const vehicleId = data.id;
+
+        Array.from(scSelect.options).forEach(opt => {
+            if (opt.value === "") return; // Header
+            const assignedTo = opt.getAttribute('data-assigned-to');
+            if (!assignedTo || assignedTo === vehicleId) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        document.getElementById('editSc').value = data.scId || '';
+        document.getElementById('editDistrict').value = data.districtId || '';
+        document.getElementById('editProject').value = data.projectId || '';
+        document.getElementById('editLat').value = data.lat;
+        document.getElementById('editLng').value = data.lng;
+        document.getElementById('editVehicleModal').showModal();
+    }
+
+    async function openLocationHistoryModal(id, reg) {
+        document.getElementById('historyVName').textContent = reg;
+        document.getElementById('locationHistoryModal').showModal();
+        document.getElementById('locLoader').style.display = 'block';
+        document.getElementById('locTable').style.display = 'none';
+
+        try {
+            const response = await fetch(`/api/vehicle/${id}/location-history/`);
+            const data = await response.json();
+
+            const tbody = document.getElementById('locContent');
+            tbody.innerHTML = '';
+
+            if (data.history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No location records found.</td></tr>';
+            } else {
+                data.history.forEach(item => {
+                    const date = new Date(item.timestamp);
+                    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+
+                    tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid var(--surface-border);">
+                            <td style="padding: 1rem; font-family: monospace; font-weight: 600;">${item.service_code}</td>
+                            <td style="padding: 1rem; color: var(--primary-color); font-size: 0.9rem;">
+                                ${parseFloat(item.latitude).toFixed(4)}, ${parseFloat(item.longitude).toFixed(4)}
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-secondary);">${date.toLocaleDateString('en-IN', options)}</td>
+                            <td style="padding: 1rem; color: var(--text-main);">${item.updated_by}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('locLoader').style.display = 'none';
+            document.getElementById('locTable').style.display = 'table';
+
+        } catch (error) {
+            document.getElementById('locLoader').innerHTML = '<span style="color: var(--danger-color);">Error loading location history.</span>';
+        }
+    }
+</script>
+{% endif %}
+{% endblock %}

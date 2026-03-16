@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Mandal | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 600px;">
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Edit Mandal
+        </h1>
+        <p style="color: var(--text-secondary);">Update mandal name or district.</p>
+    </div>
+
+    <div class="card" style="padding: 2rem;">
+        <form method="post">
+            {% csrf_token %}
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Mandal
+                    Name</label>
+                <input type="text" name="name" value="{{ mandal.name }}" required
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">District</label>
+                <select name="district_id" required
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                    {% for d in districts %}
+                    <option value="{{ d.id }}" {% if mandal.district_id==d.id %}selected{% endif %}>{{ d.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <a href="{% url 'authentication:mandal_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update Mandal</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

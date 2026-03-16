@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <div
+                style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span>Configuration</span>
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">System
+                Settings</h1>
+            <p style="color: var(--text-secondary);">Manage global permissions and feature access for roles.</p>
+        </div>
+
+        <!-- Project Selector -->
+        <form method="get" id="projectForm"
+            style="display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--surface-border);">
+            <label for="projectSelector" style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">Select
+                Project:</label>
+            <select name="project_id" id="projectSelector" onchange="document.getElementById('projectForm').submit()"
+                style="padding: 0.5rem; border: 1px solid var(--surface-border); border-radius: var(--radius-sm); outline: none; min-width: 150px;">
+                <option value="" {% if not selected_project %}selected{% endif %}>--- Select a Project ---</option>
+                {% for p in projects %}
+                <option value="{{ p.id }}" {% if selected_project.id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="project_id" value="{{ selected_project.id|default:'' }}">
+
+        <!-- Role Deadlines -->
+        {% if selected_project %}
+        <!-- Project-Specific Scheduler Section -->
+        <div class="card"
+            style="padding: 0; overflow: hidden; margin-bottom: 2rem; border: 1px solid var(--primary-color);">
+            <div
+                style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); background: var(--primary-bg);">
+                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--primary-active); margin: 0;">Project
+                    Monitoring Schedule: {{ selected_project.name }}</h3>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">
+                    Set when the system should scan this specific project for missed deadlines.
+                </p>
+            </div>
+            <div style="padding: 1.5rem;">
+                <div style="display: flex; gap: 2rem; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <label style="font-weight: 600; font-size: 0.9rem;">Daily Check Time:</label>
+                        <div
+                            style="display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem; border: 1px solid var(--surface-border); border-radius: var(--radius-lg);">
+                            <input type="number" name="scheduler_hour" value="{{ scheduler_hour }}" min="0" max="23"
+                                style="padding: 0.5rem; border: none; width: 60px; text-align: center; font-weight: 700; outline: none;">
+                            <span style="font-weight: 700;">:</span>
+                            <input type="number" name="scheduler_minute" value="{{ scheduler_minute }}" min="0" max="59"
+                                style="padding: 0.5rem; border: none; width: 60px; text-align: center; font-weight: 700; outline: none;">
+                        </div>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">(24-Hour Format)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+            <div
+                style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); background: var(--surface-ground);">
+                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-main); margin: 0;">Inspection
+                    Deadlines ({{ selected_project.name }})</h3>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">
+                    Set the maximum time allowed between inspections before alerting.
+                </p>
+            </div>
+            <div class="table-responsive">
+                <table class="table" style="margin: 0;">
+                    <thead style="background: #f8fafc;">
+                        <tr>
+                            <th style="padding-left: 1.5rem;">Role Name</th>
+                            <th>Deadline Limit</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background: white;">
+                        {% for data in role_deadlines_data %}
+                        <tr>
+                            <td style="padding-left: 1.5rem; font-weight: 600;">{{ data.role.name }}</td>
+                            <td>
+                                <div style="display: flex; gap: 1.5rem; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="number" name="deadline_days_{{ data.role.id }}"
+                                            value="{{ data.days }}" min="0" max="365"
+                                            style="padding: 0.5rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); width: 70px;">
+                                        <span style="font-size: 0.85rem; color: var(--text-secondary);">days</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="number" name="deadline_hours_{{ data.role.id }}"
+                                            value="{{ data.hours }}" min="0" max="23"
+                                            style="padding: 0.5rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); width: 70px;">
+                                        <span style="font-size: 0.85rem; color: var(--text-secondary);">hours</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="number" name="deadline_mins_{{ data.role.id }}"
+                                            value="{{ data.mins }}" min="0" max="59"
+                                            style="padding: 0.5rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); width: 70px;">
+                                        <span style="font-size: 0.85rem; color: var(--text-secondary);">mins</span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="card"
+            style="padding: 2rem; text-align: center; margin-bottom: 2rem; border: 1px dashed var(--surface-border); background: var(--surface-ground);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-bottom: 1rem;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <p style="color: var(--text-secondary); margin: 0; font-size: 1rem;">Please select a project from the top
+                right to configure inspection deadlines.</p>
+        </div>
+        {% endif %}
+
+
+        <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Toggle Switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    input:checked+.slider {
+        background-color: var(--primary-color);
+    }
+
+    input:focus+.slider {
+        box-shadow: 0 0 1px var(--primary-color);
+    }
+
+    input:checked+.slider:before {
+        -webkit-transform: translateX(20px);
+        -ms-transform: translateX(20px);
+        transform: translateX(20px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}

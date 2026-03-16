@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+{% load tz %}
+
+{% block title %}New Inspection | 104 Ops{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <a href="{% url 'ops_104:dashboard' %}"
+                style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </a>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main);">Perform Daily Inspection</h1>
+            <p style="color: var(--text-secondary);">Fill out the checklist below. Items marked with * are mandatory.
+            </p>
+        </div>
+        <div style="text-align: right;">
+            <span
+                style="font-weight: 600; color: var(--primary-color); background: var(--primary-bg); padding: 0.5rem 1rem; border-radius: var(--radius-md);">{{today_date}}</span>
+        </div>
+    </div>
+
+    <style>
+        .vehicle-info-grid {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .vehicle-info-grid {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1.5rem !important;
+            }
+
+            .vehicle-info-grid>div {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                /* Make items row-like inside the column or just block? */
+                align-items: center;
+                border-bottom: 1px solid var(--surface-border);
+                /* nice separator */
+                padding-bottom: 0.5rem;
+            }
+
+            .vehicle-info-grid>div:last-child {
+                border-bottom: none;
+            }
+        }
+    </style>
+
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if user_role == 'inspection' and is_readonly %}
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+            <div class="alert alert-warning"
+                style="background: #fff3cd; color: #856404; padding: 1rem; border: 1px solid #ffeeba; border-radius: 8px; display: flex; align-items: flex-start; gap: 1rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 0.2rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <div>
+                    <strong style="font-size: 1.05rem;">Already Submitted</strong><br>
+                    <div style="margin-top: 0.4rem; font-size: 0.9rem; color: #6a4d03; font-weight: 500;">
+                        This vehicle has already been inspected recently. Next inspection allowed after
+                        <strong>{{next_allowed_date|date:"M d, Y" }}</strong>.
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Vehicle Selection Section -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div
+                style="padding: 1.25rem; background: #fafafa; border-bottom: 1px solid var(--surface-border); display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);">
+                    <path
+                        d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2">
+                    </path>
+                    <circle cx="7" cy="17" r="2"></circle>
+                    <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+                <h3 style="font-size: 1.1rem; font-weight: 600;">Vehicle Information</h3>
+            </div>
+            <div style="padding: 1.5rem;">
+                {% if vehicle %}
+                <div class="vehicle-info-grid">
+                    <div>
+                        <span
+                            style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">REGISTRATION
+                            NO.</span>
+                        <span
+                            style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">{{vehicle.registration_number}}</span>
+                        <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                    </div>
+                    <div>
+                        <span
+                            style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">MODEL</span>
+                        <span style="font-size: 1.1rem; font-weight: 500;">{{ vehicle.model_name }}</span>
+                    </div>
+                    <div>
+                        <span
+                            style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">SERVICE
+                            CODE</span>
+                        <span
+                            style="font-size: 1.1rem; font-weight: 500; font-family: monospace;">{{vehicle.service_code.code}}</span>
+                    </div>
+                    <div>
+                        <span
+                            style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">DISTRICT</span>
+                        <span style="font-size: 1.1rem; font-weight: 500;">{{ vehicle.district.name|default:"-"}}
+                            {% if is_readonly%}
+                            <span
+                                style="display:inline-block; margin-left:10px; padding: 2px 8px; font-size: 0.8rem; font-weight: 600; color: #15803d; background-color: #dcfce7; border-radius: 9999px;">
+                                Submitted
+                            </span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% else %}
+                <!-- If no vehicle auto-detected, show dropdown -->
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Select Vehicle for
+                    Inspection</label>
+                <select name="vehicle_id" required
+                    onchange="if(this.value) window.location.search = 'vehicle_id=' + this.value"
+                    style="width: 100%; max-width: 400px; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);"
+                    {% if is_readonly %}disabled{% endif %}>
+                    <option value="">-- Select Vehicle --</option>
+                    {% for v in available_vehicles %}
+                    <option value="{{ v.id }}">{{ v.registration_number }} ({{ v.service_code.code }})</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if vehicle %}
+        {% if not is_readonly %}
+        {% for category in categories %}
+        <div class="card" style="margin-bottom: 2rem; overflow: hidden;">
+            <div
+                style="padding: 1rem 1.5rem; background: var(--surface-ground); border-bottom: 1px solid var(--surface-border); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--primary-color); display: flex;">
+                        {{ category.icon|safe }}
+                    </span>
+                    <h3
+                        style="font-size: 1rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px;">
+                        {{ category.name }}</h3>
+                </div>
+                <button type="button" onclick="markCategoryGood(this)"
+                    style="padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                    onmouseover="this.style.background='var(--primary-color)'; this.style.color='white'"
+                    onmouseout="this.style.background='transparent'; this.style.color='var(--primary-color)'">
+                    Mark All Good
+                </button>
+            </div>
+
+            <div style="padding: 0;">
+                {% for question in category.questions.all %}
+                <div class="question-row" data-type="{{ question.question_type }}"
+                    style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border);">
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            {% if question.icon %}
+                            <div
+                                style="padding: 0.4rem; background: #f0f9ff; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                {{ question.icon|safe }}
+                            </div>
+                            {% endif %}
+                            <p style="font-weight: 600; font-size: 1rem; margin: 0;">{{ question.text }}</p>
+                        </div>
+
+                        <!-- Options Wrapper -->
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            {% if question.question_type == 'boolean' %}
+                            <label class="radio-card">
+                                <input type="radio" name="response_{{ question.id }}" value="true" required
+                                    onchange="handleResponseChange(this)">
+                                <span>Good</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="response_{{ question.id }}" value="false" required
+                                    onchange="handleResponseChange(this)">
+                                <span>Not Good</span>
+                            </label>
+
+                            {% elif question.question_type == 'condition' %}
+                            <label class="radio-card">
+                                <input type="radio" name="response_{{ question.id }}" value="good" required
+                                    onchange="handleResponseChange(this)">
+                                <span>Good</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="response_{{ question.id }}" value="average" required
+                                    onchange="handleResponseChange(this)">
+                                <span>Average</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="response_{{ question.id }}" value="poor" required
+                                    onchange="handleResponseChange(this)">
+                                <span>Poor</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="response_{{ question.id }}" value="not_operational" required
+                                    onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if
+                                    question.existing_response.response=='not_operational' %}checked{% endif %}{% endif
+                                    %}>
+                                <span>Not Operational</span>
+                            </label>
+
+                            {% elif question.question_type == 'maintenance' %}
+                            <!-- Step 1: Register Availability -->
+                            <div style="margin-bottom: 1rem;">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Is
+                                    Register Available?</p>
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <label class="radio-card">
+                                        <input type="radio" name="available_toggle_{{ question.id }}" value="yes"
+                                            onchange="handleAvailabilityToggle(this, '{{ question.id }}')">
+                                        <span>Yes</span>
+                                    </label>
+                                    <label class="radio-card">
+                                        <input type="radio" name="response_{{ question.id }}" value="not_available"
+                                            onchange="handleAvailabilityToggle(this, '{{ question.id }}')">
+                                        <span>No</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Maintenance Status (Hidden initially) -->
+                            <div id="sub_options_{{ question.id }}"
+                                style="display: none; padding-left: 1rem; border-left: 2px solid var(--surface-border);">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    Maintenance Status:</p>
+                                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                    <label class="radio-card">
+                                        <input type="radio" name="response_{{ question.id }}" value="maintained"
+                                            onchange="handleResponseChange(this)">
+                                        <span>Maintained</span>
+                                    </label>
+                                    <label class="radio-card">
+                                        <input type="radio" name="response_{{ question.id }}"
+                                            value="partially_maintained" onchange="handleResponseChange(this)">
+                                        <span>Partially</span>
+                                    </label>
+                                    <label class="radio-card">
+                                        <input type="radio" name="response_{{ question.id }}" value="not_maintained"
+                                            onchange="handleResponseChange(this)">
+                                        <span>Not Maintained</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {% elif question.question_type == 'equipment' %}
+                            <!-- Step 1: Equipment Availability -->
+                            <div style="margin-bottom: 1rem;">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Is
+                                    Equipment Available?</p>
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <label class="radio-card">
+                                        <input type="radio" name="available_toggle_{{ question.id }}" value="yes"
+                                            onchange="handleAvailabilityToggle(this, '{{ question.id }}')">
+                                        <span>Yes</span>
+                                    </label>
+                                    <label class="radio-card">
+                                        <input type="radio" name="response_{{ question.id }}" value="not_available"
+                                            onchange="handleAvailabilityToggle(this, '{{ question.id }}')">
+                                        <span>No</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Condition (Hidden initially) -->
+                            <div id="sub_options_{{ question.id }}"
+                                style="display: none; padding-left: 1rem; border-left: 2px solid var(--surface-border);">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    Condition:</p>
+                                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                    <label class="radio-card">
+                                        <input type="radio" name="response_{{ question.id }}" value="available_working"
+                                            onchange="handleResponseChange(this)">
+                                        <span>Working</span>
+                                    </label>
+                                    <label class="radio-card">
+                                        <input type="radio" name="response_{{ question.id }}"
+                                            value="available_not_working" onchange="handleResponseChange(this)">
+                                        <span>Not Working</span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="proof-section proof-container" id="proof_{{ question.id }}" {% if is_readonly and question.existing_response.remarks %}style="display: block;" {% else %}style="display: none;" {% endif %}>
+                            <p
+                                style="color: var(--danger-color); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem;">
+                                {% if is_readonly %}Recorded Issue Details{% else %}Issue Detected! Please provide
+                                details.{% endif %}
+                            </p>
+                            <div class="defect-fields"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label
+                                        style="font-size: 0.8rem; margin-bottom: 0.25rem; display: block;">Photo</label>
+                                    {% if is_readonly %}
+                                    {% if question.existing_response.photo %}
+                                    <a href="{{ question.existing_response.photo.url }}" target="_blank"
+                                        style="color: var(--primary-color); text-decoration: underline; font-size: 0.9rem;">View
+                                        Uploaded Photo</a>
+                                    {% else %}
+                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">No photo
+                                        uploaded</span>
+                                    {% endif %}
+                                    {% else %}
+                                    <input type="file" name="photo_{{ question.id }}" accept="image/*"
+                                        class="form-control" style="font-size: 0.85rem;">
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; margin-bottom: 0.25rem; display: block;">Remarks
+                                        *</label>
+                                    <textarea name="remarks_{{ question.id }}"
+                                        placeholder="Describe the issue..."
+                                        {% if is_readonly %}disabled{% endif %}
+                                        style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; min-height: 80px;">{{ question.existing_response.remarks|default:'' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if is_readonly %}
+        <div style="margin-bottom: 2rem; display: flex; justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" onclick="window.history.back()"
+                style="padding: 1rem 2rem; font-size: 1.1rem; background: #64748b; color: white; border: none; border-radius: 4px;">
+                Back
+            </button>
+        </div>
+        {% else %}
+        <div style="margin-bottom: 4rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary"
+                style="padding: 1rem 2rem; font-size: 1.1rem; box-shadow: var(--shadow-lg);">
+                Submit Inspection Report
+            </button>
+        </div>
+        {% endif %}
+        {% endif %}
+
+    </form>
+</div>
+
+<style>
+    /* Radio Button Card Styling */
+    .radio-card {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+    }
+
+    .radio-card input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .radio-card span {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid var(--surface-border);
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+    }
+
+    .radio-card input:checked+span {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 6px -1px rgba(var(--primary-hue), 0.4);
+        transform: translateY(-1px);
+    }
+
+    .radio-card:hover span {
+        border-color: var(--primary-color);
+    }
+
+    /* Responsive Defect Fields */
+    @media (max-width: 768px) {
+        .defect-fields {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+        
+        .defect-fields textarea {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+    }
+</style>
+
+<script>
+    function handleAvailabilityToggle(radio, qId) {
+        const subOptionsDiv = document.getElementById('sub_options_' + qId);
+        const proofDiv = document.getElementById('proof_' + qId);
+
+        if (radio.value === 'yes') {
+            // Register IS available
+            subOptionsDiv.style.display = 'block';
+            proofDiv.style.display = 'none';
+            proofDiv.querySelectorAll('input').forEach(i => i.required = false);
+
+            // Uncheck "No" (not_available)
+            const noRadio = document.querySelector(`input[name="response_${qId}"][value="not_available"]`);
+            if (noRadio) noRadio.checked = false;
+
+            // Make sub-options required
+            subOptionsDiv.querySelectorAll('input[type="radio"]').forEach(r => r.required = true);
+
+        } else if (radio.value === 'not_available') {
+            // Register NOT available
+            subOptionsDiv.style.display = 'none';
+            proofDiv.style.display = 'block';
+            proofDiv.querySelectorAll('input').forEach(i => i.required = true);
+
+            // Uncheck "Yes" toggle
+            const yesRadio = document.querySelector(`input[name="available_toggle_${qId}"]`);
+            if (yesRadio) yesRadio.checked = false;
+
+            // Clear and un-require sub-options
+            subOptionsDiv.querySelectorAll('input[type="radio"]').forEach(r => {
+                r.checked = false;
+                r.required = false;
+            });
+        }
+    }
+
+    function handleResponseChange(radio) {
+        const questionRow = radio.closest('.question-row');
+        const qType = questionRow.dataset.type;
+        const val = radio.value;
+        const qId = radio.name.split('_')[1];
+        const proofDiv = document.getElementById('proof_' + qId);
+
+        let show = false;
+
+        if (qType === 'boolean' && val === 'false') show = true;
+        if (qType === 'condition' && (val === 'poor' || val === 'not_operational')) show = true;
+        if (qType === 'maintenance' && val === 'not_maintained') show = true;
+        if (qType === 'equipment' && (val === 'available_not_working' || val === 'not_available')) show = true;
+
+        if (show) {
+            proofDiv.style.display = 'block';
+            proofDiv.querySelectorAll('input').forEach(i => i.required = true);
+        } else {
+            proofDiv.style.display = 'none';
+            proofDiv.querySelectorAll('input').forEach(i => i.required = false);
+        }
+    }
+
+    function markCategoryGood(btn) {
+        const card = btn.closest('.card');
+        const questions = card.querySelectorAll('.question-row');
+
+        questions.forEach(row => {
+            const type = row.dataset.type;
+
+            if (type === 'boolean') {
+                const goodRadio = row.querySelector('input[value="true"]');
+                if (goodRadio && !goodRadio.checked) goodRadio.click();
+            } else if (type === 'condition') {
+                const goodRadio = row.querySelector('input[value="good"]');
+                if (goodRadio && !goodRadio.checked) goodRadio.click();
+            } else if (type === 'maintenance') {
+                // Step 1: Available Yes
+                const availYes = row.querySelector('input[name^="available_toggle"][value="yes"]');
+                if (availYes) availYes.click();
+
+                // Step 2: Maintained (Radio)
+                // We use setTimeout to ensure UI updates if there's any lag, though usually sync.
+                // But simple click should work.
+                const maintained = row.querySelector('input[value="maintained"]');
+                if (maintained) maintained.click();
+
+            } else if (type === 'equipment') {
+                // Step 1: Available Yes
+                const availYes = row.querySelector('input[name^="available_toggle"][value="yes"]');
+                if (availYes) availYes.click();
+
+                // Step 2: Working
+                const working = row.querySelector('input[value="available_working"]');
+                if (working) working.click();
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Mandals | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Mandals
+            </h1>
+            <p style="color: var(--text-secondary);">Manage mandals for each district.</p>
+        </div>
+        <button onclick="document.getElementById('addMandalModal').showModal()" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Mandal
+        </button>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem; width: 80px;">S.No</th>
+                        <th style="padding-left: 1.5rem;">Mandal Name</th>
+                        <th>District</th>
+                        <th style="text-align: right; padding-right: 1.5rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in mandals %}
+                    <tr>
+                        <td style="padding-left: 1.5rem; color: var(--text-secondary);">
+                            {{ forloop.counter }}
+                        </td>
+                        <td style="padding-left: 1.5rem; font-weight: 600; color: var(--text-main);">
+                            {{ m.name }}
+                        </td>
+                        <td style="color: var(--text-secondary);">
+                            {{ m.district.name }}
+                        </td>
+                        <td style="text-align: right; padding-right: 1.5rem;">
+                            <a href="{% url 'authentication:mandal_edit' m.pk %}"
+                                style="display: inline-flex; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; margin-right: 0.5rem;"
+                                title="Edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+                            <button data-url="{% url 'authentication:mandal_delete' m.pk %}"
+                                data-name="{{ m.name|escapejs }}"
+                                onclick="openDeleteModal(this.dataset.url, this.dataset.name)"
+                                style="background: none; border: none; cursor: pointer; color: #ef4444;" title="Delete">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            No mandals found. Add one to get started.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Mandal Modal -->
+<dialog id="addMandalModal"
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 400px; background: white; overflow: visible;">
+    <div
+        style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.1rem; font-weight: 600;">Add New Mandal</h3>
+        <button onclick="document.getElementById('addMandalModal').close()"
+            style="background: none; border: none; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form method="post" action="{% url 'authentication:mandal_list' %}" style="padding: 1.5rem;">
+        {% csrf_token %}
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Mandal
+                Name</label>
+            <input type="text" name="name" required placeholder="e.g. Amberpet"
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label
+                style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">District</label>
+            <select name="district_id" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                <option value="">-- Select District --</option>
+                {% for d in districts %}
+                <option value="{{ d.id }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+            <button type="button" onclick="document.getElementById('addMandalModal').close()"
+                class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Mandal</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="deleteModal"
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 400px; background: white; overflow: visible;">
+    <div style="padding: 1.5rem; text-align: center;">
+        <div
+            style="width: 48px; height: 48px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                </path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">Delete Mandal?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Are you sure you want to delete <span
+                id="deleteName" style="font-weight: 700; color: var(--text-main);"></span>? This action cannot be
+            undone.</p>
+
+        <form method="post" id="deleteForm" style="display: flex; gap: 1rem; justify-content: center;">
+            {% csrf_token %}
+            <button type="button" onclick="document.getElementById('deleteModal').close()" class="btn btn-outline"
+                style="width: 100%;">Cancel</button>
+            <button type="submit" class="btn"
+                style="background: #ef4444; color: white; border: none; width: 100%;">Delete</button>
+        </form>
+    </div>
+</dialog>
+
+<script>
+    function openDeleteModal(url, name) {
+        document.getElementById('deleteForm').action = url;
+        document.getElementById('deleteName').textContent = name;
+        document.getElementById('deleteModal').showModal();
+    }
+</script>
+{% endblock %}

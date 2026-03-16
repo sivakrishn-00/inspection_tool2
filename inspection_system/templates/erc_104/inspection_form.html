@@ -1,0 +1,697 @@
+{% extends 'base.html' %}
+
+{% block title %}New Benchmark | ERC{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1100px; margin: 0 auto;">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <a href="{% url 'erc_104:dashboard' %}"
+                style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </a>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main);">Perform ERC Audit</h1>
+            <p style="color: var(--text-secondary);">Center Benchmarking & Asset Verification.</p>
+        </div>
+        <div style="text-align: right;">
+            <span
+                style="font-weight: 600; color: var(--primary-color); background: var(--primary-bg); padding: 0.5rem 1rem; border-radius: var(--radius-md);">{{today_date}}</span>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if is_readonly %}
+        <div class="alert alert-warning"
+            style="background: #fff3cd; color: #856404; padding: 1rem; border: 1px solid #ffeeba; border-radius: 8px; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div>
+                <strong>Already Submitted</strong><br>
+                You have already inspected this center. The next inspection is allowed after <strong>{{
+                    next_allowed_date|date:"M d, Y" }}</strong>.
+                Showing submitted data below.
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Center Selection (Simplified) -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="padding: 1.25rem; background: #fafafa; border-bottom: 1px solid var(--surface-border);">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #ea580c;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    Location Details
+                </h3>
+            </div>
+            <div style="padding: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Select ERC Center</label>
+                <select name="center_id" required onchange="location.href='?center_id=' + this.value"
+                    style="width: 100%; max-width: 400px; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);"
+                    {% if is_readonly %}disabled{% endif %}>
+                    <option value="" {% if not selected_center %}selected{% endif %} disabled>-- Choose a center --</option>
+                    {% for c in centers %}
+                    <option value="{{ c.id }}" {% if c.id == selected_center.id %}selected{% endif %}>
+                        {{c.name}}{% if c.location %} - {{ c.location }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        {% if selected_center %}
+        <!-- Visual Layout Inspection Section -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="padding: 1.25rem; background: #fafafa; border-bottom: 1px solid var(--surface-border);">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: #ea580c;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h18v18H3zM21 9H3M21 15H3M12 3v18" />
+                    </svg>
+                    Facility Inspection
+                </h3>
+            </div>
+            <div style="padding: 1.5rem;">
+                <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.9rem;">
+                    Interactive Facility Map. Tap items to toggle: <b style="color: #10b981;">Green (Operational)</b> vs
+                    <b style="color: #ef4444;">Red (Issue)</b>.
+                <div class="layout-container">
+                    {% for section in grid_sections %}
+                    <!-- Dynamic Room Section -->
+                    <div class="room-section">
+                        <div class="room-title">{{ section.name }}</div>
+                        <div class="screen">{{ section.prefix }} - {{ section.name|upper }}</div>
+                        <!-- Provide data attributes for initGrid to use -->
+                        <div class="seat-grid" id="grid-{{ section.slug }}" data-slug="{{ section.slug }}"
+                            data-icon="{{ section.icon }}" data-rows="{{ section.rows }}"
+                            data-cols="{{ section.cols }}"></div>
+                        <div id="defects-{{ section.slug }}" class="local-defects"></div>
+                    </div>
+                    {% empty %}
+                    <div style="width: 100%; text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        <p>No facility layout configured. Go to "Manage Checklist" to add rooms.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Dynamic Defects Reporting Section -->
+                <div id="defects-container" style="margin-top: 2rem;"></div>
+
+                <input type="hidden" name="visual_layout_data" id="visual_layout_data">
+            </div>
+        </div>
+        {% else %}
+        <div class="card" style="margin-bottom: 2rem; padding: 3rem; text-align: center;">
+            <div style="color: var(--text-secondary);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem; opacity: 0.5;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p style="font-size: 1.1rem;">Please select an ERC Center above to start the audit.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if selected_center %}
+            {% for category in categories %}
+            <div class="card" style="margin-bottom: 2rem; overflow: hidden;">
+                <div
+                    style="padding: 1rem 1.5rem; background: var(--surface-ground); border-bottom: 1px solid var(--surface-border); display: flex; align-items: center; justify-content: space-between;">
+                    <h3
+                        style="font-size: 1rem; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+                        {% if category.name == 'Services' %}
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                        </svg>
+                        {% elif category.name == 'Infrastructure' %}
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                            <line x1="9" y1="22" x2="9" y2="22"></line>
+                            <line x1="15" y1="22" x2="15" y2="22"></line>
+                            <line x1="12" y1="18" x2="12" y2="18"></line>
+                            <line x1="12" y1="2" x2="12" y2="10"></line>
+                        </svg>
+                        {% endif %}
+                        {{ category.name }}
+                    </h3>
+                    <button type="button" onclick="markCategoryGood(this)"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: white; border: 1px solid var(--primary-color); color: var(--primary-color); border-radius: 4px; cursor: pointer;">
+                        Mark All Good
+                    </button>
+                </div>
+
+                <div style="padding: 0;">
+                    {% for item in category.items.all %}
+                    <div class="question-row" data-type="{{ item.item_type }}"
+                        style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border);">
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <p style="font-weight: 600; font-size: 1rem; margin: 0;">{{ item.text }}</p>
+
+                            <!-- Options Wrapper -->
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                {% if item.item_type == 'boolean' %}
+                                <label class="radio-card">
+                                    <input type="radio" name="response_{{ item.id }}" value="true" required
+                                        onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if item.existing_response.response == 'true' %}checked{% endif %}{% endif %}>
+                                    <span>Good</span>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="response_{{ item.id }}" value="false" required onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if item.existing_response.response == 'false' %}checked{% endif %}{% endif %}>
+                                    <span>Not Good</span>
+                                </label>
+
+                                {% elif item.item_type == 'condition' %}
+                                <label class="radio-card">
+                                    <input type="radio" name="response_{{ item.id }}" value="good" required
+                                        onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if item.existing_response.response == 'good' %}checked{% endif %}{% endif %}>
+                                    <span>Good</span>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="response_{{ item.id }}" value="damaged" required
+                                        onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if item.existing_response.response == 'damaged' %}checked{% endif %}{% endif %}>
+                                    <span>Damaged</span>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="response_{{ item.id }}" value="missing" required
+                                        onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if item.existing_response.response == 'missing' %}checked{% endif %}{% endif %}>
+                                    <span>Missing</span>
+                                </label>
+
+                                {% elif item.item_type == 'availability' %}
+                                <label class="radio-card">
+                                    <input type="radio" name="response_{{ item.id }}" value="available" required onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if item.existing_response.response == 'available' %}checked{% endif %}{% endif %}>
+                                    <span>Available</span>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="response_{{ item.id }}" value="not_available" required
+                                        onchange="handleResponseChange(this)" {% if is_readonly %}disabled {% if item.existing_response.response == 'not_available' %}checked{% endif %}{% endif %}>
+                                    <span>Not Available</span>
+                                </label>
+                                {% endif %}
+                            </div>
+
+                            <!-- Proof Section -->
+                            <div class="proof-section proof-container" id="proof_{{ item.id }}" {% if is_readonly and item.existing_response.remarks %}style="display: block;" {% else %}style="display: none;" {% endif %}>
+                                <p
+                                    style="color: var(--danger-color); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem;">
+                                    {% if is_readonly %}Recorded Issue Details{% else %}Issue Detected! Please provide
+                                    details.{% endif %}
+                                </p>
+                                <div class="defect-fields"
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div>
+                                        <label
+                                            style="font-size: 0.8rem; margin-bottom: 0.25rem; display: block;">Photo</label>
+                                        {% if is_readonly %}
+                                        {% if item.existing_response.photo %}
+                                        <a href="{{ item.existing_response.photo.url }}" target="_blank"
+                                            style="color: var(--primary-color); text-decoration: underline; font-size: 0.9rem;">View
+                                            Uploaded Photo</a>
+                                        {% else %}
+                                        <span style="color: var(--text-secondary); font-size: 0.9rem;">No photo
+                                            uploaded</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <input type="file" name="photo_{{ item.id }}" accept="image/*" class="form-control"
+                                            style="font-size: 0.85rem;">
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; margin-bottom: 0.25rem; display: block;">Remarks
+                                            *</label>
+                                        <textarea name="remarks_{{ item.id }}" placeholder="Describe the issue..."
+                                            {% if is_readonly %}disabled{% endif %}
+                                            style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; min-height: 80px;">{{ item.existing_response.remarks|default:'' }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if is_readonly %}
+            <div style="margin-bottom: 2rem; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="window.history.back()"
+                    style="padding: 1rem 2rem; font-size: 1.1rem; background: #64748b; color: white; border: none; border-radius: 4px;">
+                    Back
+                </button>
+            </div>
+            {% else %}
+            <div style="margin-bottom: 4rem; display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary"
+                    style="padding: 1rem 2rem; font-size: 1.1rem; box-shadow: var(--shadow-lg);">
+                    Submit Audit Report
+                </button>
+            </div>
+            {% endif %}
+        {% endif %}
+
+    </form>
+</div>
+
+<!-- Output Grid Configuration as JSON for safe JS usage -->
+{{ grid_config|json_script:"grid-config-data" }}
+
+<style>
+    /* Radio Button Card Styling */
+    .radio-card {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+    }
+
+    .radio-card input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+
+    }
+
+    .radio-card span {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid var(--surface-border);
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+    }
+
+    .radio-card input:checked+span {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 6px -1px rgba(var(--primary-hue), 0.4);
+        transform: translateY(-1px);
+    }
+
+    .radio-card:hover span {
+        border-color: var(--primary-color);
+    }
+
+    /* Responsive Defect Form for Mobile */
+    @media (max-width: 768px) {
+        .defect-fields {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+        }
+
+        .defect-fields textarea {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+    }
+
+    /* Layout Inspection Styling */
+    .layout-container {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .room-section {
+        background: #ffffff;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1 1 280px;
+        /* Allow growing and shrinking, basewidth 280px */
+        max-width: 320px;
+        /* Prevent overly wide cards on desktop */
+    }
+
+    .room-title {
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-main);
+        font-size: 1.1rem;
+        text-align: center;
+    }
+
+    .screen {
+        width: 100%;
+        height: 24px;
+        background: #e2e8f0;
+        margin-bottom: 1.5rem;
+        border-radius: 40px 40px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: #64748b;
+        font-weight: 600;
+        letter-spacing: 1px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transform: perspective(200px) rotateX(-5deg);
+    }
+
+    .seat-grid {
+        display: grid;
+        grid-template-columns: repeat(var(--cols), 1fr);
+        gap: 0.75rem;
+    }
+
+    .seat {
+        width: 40px;
+        height: 40px;
+        background: #10b981;
+        /* Default Working (Green) */
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        position: relative;
+    }
+
+    .seat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.4);
+    }
+
+    .seat.issue {
+        background: #ef4444;
+        /* Issue (Red) */
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        animation: shake 0.3s ease-in-out;
+    }
+
+    .seat svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+    }
+
+    .seat.issue:hover {
+        box-shadow: 0 4px 6px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Defect Card Styling (Appears when Red is selected) */
+    .defect-card {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        width: 100%;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    .defect-card h4 {
+        color: #9f1239;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes shake {
+        0% {
+            transform: translateX(0);
+        }
+
+        25% {
+            transform: translateX(-3px);
+        }
+
+        50% {
+            transform: translateX(3px);
+        }
+
+        75% {
+            transform: translateX(-3px);
+        }
+
+        100% {
+            transform: translateX(0);
+        }
+    }
+
+    /* Mobile Logic */
+    @media (max-width: 768px) {
+        .layout-container {
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .room-section {
+            width: 100%;
+            max-width: 100%;
+            flex: 1 1 100%;
+        }
+
+        /* Responsive Defect Form for Mobile */
+        .defect-fields {
+            grid-template-columns: 1fr !important;
+            /* Stack vertically on mobile */
+            gap: 0.5rem !important;
+        }
+
+        .defect-fields input[type="text"] {
+            width: 100% !important;
+            /* Ensure full width */
+            box-sizing: border-box;
+            /* Include padding in width */
+        }
+    }
+
+    /* Proof Container Styles (Moved from inline) */
+    .proof-container {
+        background: #fff1f2;
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--danger-color);
+        margin-top: 0.5rem;
+    }
+</style>
+
+<script>
+    // Grid Configuration
+    // Parse the JSON data safely from the script tag
+    const GRID_CONFIG = JSON.parse(document.getElementById('grid-config-data').textContent);
+
+    // SVGs for Icons
+    const ICONS = {
+        'chair': `<svg viewBox="0 0 24 24"><path d="M7 13h10v-2c0-2.21-1.79-4-4-4H11c-2.21 0-4 1.79-4 4v2zm0 2v6h2v-4h6v4h2v-6H7z"/></svg>`,
+        'bulb': `<svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85-.6V16h-4v-2.3l-.85-.6C7.93 12.37 7 11.25 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.25-.93 3.37-3.15 4.1z"/></svg>`,
+        'monitor': `<svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h3l-1 1v2h12v-2l-1-1h3c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 13H4V5h16v11z"/></svg>`,
+        'ac': `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v4H7v2h4v4h2v-4h4v-2h-4z"/></svg>`,
+        'fire': `<svg viewBox="0 0 24 24"><path d="M19.48 12.35c-1.57-4.08-7.16-4.3-5.81-10.23.1-.44-.37-.78-.75-.55C9.29 3.71 6.68 8 8.87 13.62c.18.46-.36.89-.75.59-.27-.21-.51-.45-.72-.71-.25-.3-.72-.25-.86.13-1.42 3.82.91 8.35 4.95 8.37 2.65.01 5.09-1.37 6.4-3.55.67-1.11 2.38-4.03 1.59-6.1zM12 20c-1.48 0-2.75-.81-3.45-2.01-.22-.37.13-.79.54-.64.49.18 1 .28 1.54.28 1.94 0 3.6-1.18 4.31-2.85.22-.51.96-.32 1.01.23.01.07.01.12.01.12.01 2.69-2.12 4.87-3.96 4.87z"/></svg>`,
+        'door': `<svg viewBox="0 0 24 24"><path d="M19 19V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v14H3v2h18v-2h-2zm-2 0H7V5h10v14zm-3-8h-2v2h2v-2z"/></svg>`,
+        'headset': `<svg viewBox="0 0 24 24"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>`,
+        'battery': `<svg viewBox="0 0 24 24"><path d="M16 20H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8v-2h8v2zm-4-8c1.1 0 2 .9 2 2h2v14H6V6h2c0-1.1.9-2 2-2z"/></svg>`,
+        'water': `<svg viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/></svg>`,
+        'wifi': `<svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>`,
+        'cctv': `<svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5-2.5 2.5z"/></svg>`
+    };
+
+    // Store State
+    const seatState = {};
+
+    function initGrid(slug, containerId) {
+        const config = GRID_CONFIG[slug];
+        const container = document.getElementById(containerId);
+        // Ensure container exists
+        if (!container || !config) return;
+
+        const iconType = config.icon || 'chair';
+
+        // Determine Total Items: Use explicit total_items if set, otherwise rows * cols
+        const totalCount = config.total_items ? config.total_items : (config.rows * config.cols);
+
+        // Set dynamic cols
+        container.style.setProperty('--cols', config.cols);
+        container.innerHTML = '';
+
+        for (let i = 1; i <= totalCount; i++) {
+            const id = `${slug}_${i}`;
+            seatState[id] = 'ok'; // Default state
+
+            const seat = document.createElement('div');
+            seat.className = 'seat';
+            const currentSeatNum = i;
+            seat.innerHTML = `${ICONS[iconType] || ICONS['chair']} <span style="position:absolute; bottom:2px; font-size:9px;">${currentSeatNum}</span>`;
+            seat.dataset.id = id;
+            seat.onclick = () => toggleSeat(slug, id, seat, config.name, currentSeatNum);
+
+            container.appendChild(seat);
+        }
+    }
+
+    function toggleSeat(type, id, element, roomName, seatNum) {
+        const defectsContainer = document.getElementById(`defects-${type}`);
+
+        if (seatState[id] === 'ok') {
+            seatState[id] = 'issue';
+            element.classList.add('issue');
+
+            // Create Defect Form Entry
+            const defectDiv = document.createElement('div');
+            defectDiv.className = 'defect-card';
+            defectDiv.id = `defect_row_${id}`;
+            defectDiv.innerHTML = `
+                <h4>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Issue at ${roomName} #${seatNum}
+                </h4>
+                <div class="defect-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem; display: block;">Upload Photo *</label>
+                        <input type="file" name="defect_photo_${id}" accept="image/*" required class="form-control" style="font-size: 0.85rem;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem; display: block;">Remarks *</label>
+                        <textarea name="defect_remarks_${id}" required placeholder="Describe issue (e.g. Broken, Missing)" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; min-height: 60px;"></textarea>
+                    </div>
+                </div>
+            `;
+
+            // Sort functionality: Insert in correct numerical order based on seatNum
+            // Find the correct position to insert
+            const existingDefects = Array.from(defectsContainer.children);
+            let inserted = false;
+
+            for (const child of existingDefects) {
+                // Extract seat number from the child's ID or content if possible, 
+                // but simple appending often suffices. 
+                // For true sorting, we can rely on ID comparison since IDs have seat numbers.
+                const childId = child.id.replace('defect_row_', ''); // e.g. server_5
+                const childNum = parseInt(childId.split('_')[1]);
+                const currentNum = parseInt(seatNum);
+
+                if (currentNum < childNum) {
+                    defectsContainer.insertBefore(defectDiv, child);
+                    inserted = true;
+                    break;
+                }
+            }
+
+            if (!inserted) {
+                defectsContainer.appendChild(defectDiv);
+            }
+
+        } else {
+            // Revert to OK
+            seatState[id] = 'ok';
+            element.classList.remove('issue');
+
+            // Remove Defect Form Entry
+            const existingDefect = document.getElementById(`defect_row_${id}`);
+            if (existingDefect) existingDefect.remove();
+        }
+        updateHiddenInput();
+    }
+
+    function updateHiddenInput() {
+        const input = document.getElementById('visual_layout_data');
+        input.value = JSON.stringify(seatState);
+    }
+
+    // Initialize Grids on Load
+    document.addEventListener('DOMContentLoaded', () => {
+        // dynamic initialization based on config keys
+        Object.keys(GRID_CONFIG).forEach(slug => {
+            initGrid(slug, `grid-${slug}`);
+        });
+
+        updateHiddenInput(); // Set initial state
+    });
+
+    function handleResponseChange(radio) {
+        const questionRow = radio.closest('.question-row');
+        const qType = questionRow.dataset.type;
+        const val = radio.value;
+
+        // Extract ID from name "response_123"
+        const qId = radio.name.split('_')[1];
+        const proofDiv = document.getElementById('proof_' + qId);
+
+        // Logic for Showing Proof Section
+        let show = false;
+
+        if (qType === 'boolean' && val === 'false') show = true;
+        if (qType === 'condition' && (val === 'damaged' || val === 'missing')) show = true;
+        if (qType === 'availability' && val === 'not_available') show = true;
+
+        if (show) {
+            proofDiv.style.display = 'block';
+            proofDiv.querySelectorAll('input').forEach(i => i.required = true);
+        } else {
+            proofDiv.style.display = 'none';
+            proofDiv.querySelectorAll('input').forEach(i => i.required = false);
+        }
+    }
+
+    function markCategoryGood(btn) {
+        const card = btn.closest('.card');
+        const questions = card.querySelectorAll('.question-row');
+
+        questions.forEach(row => {
+            const type = row.dataset.type;
+
+            if (type === 'boolean') {
+                const goodRadio = row.querySelector('input[value="true"]');
+                if (goodRadio && !goodRadio.checked) goodRadio.click();
+            } else if (type === 'condition') {
+                const goodRadio = row.querySelector('input[value="good"]');
+                if (goodRadio && !goodRadio.checked) goodRadio.click();
+            } else if (type === 'availability') {
+                const goodRadio = row.querySelector('input[value="available"]');
+                if (goodRadio && !goodRadio.checked) goodRadio.click();
+            }
+        });
+    }
+</script>
+{% endblock %}

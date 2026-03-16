@@ -1,0 +1,615 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Checklist | ERC 104{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px;">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <a href="{% url 'erc_104:dashboard' %}"
+                style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Dashboard
+            </a>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main);">Manage ERC Checklist</h1>
+            <p style="color: var(--text-secondary);">Add or remove items from the ERC inspection checklist.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" onclick="openAddCategoryModal()"
+                style="padding: 0.75rem 1.5rem; font-weight: 600; box-shadow: var(--shadow-md); margin-right: 0.5rem;"
+                id="btnAddCategory">
+                <span style="display: flex; align-items: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                    Add Category
+                </span>
+            </button>
+            <button type="button" class="btn btn-primary" id="btnAddItem" onclick="openAddItemModal()"
+                style="padding: 0.75rem 1.5rem; font-weight: 600; box-shadow: var(--shadow-md);">
+                <span style="display: flex; align-items: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add New Item
+                </span>
+            </button>
+            <button type="button" class="btn btn-primary" id="btnAddGrid" onclick="openAddGridModal()"
+                style="display: none; padding: 0.75rem 1.5rem; font-weight: 600; box-shadow: var(--shadow-md);">
+                <span style="display: flex; align-items: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="12" y1="3" x2="12" y2="21"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                    </svg>
+                    Add Room / Section
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--surface-border);">
+        <button onclick="switchTab('checklist')" id="tab-checklist" class="tab-btn active"
+            style="padding: 1rem; border: none; background: none; font-weight: 600; color: var(--text-main); border-bottom: 2px solid var(--primary-color); cursor: pointer;">
+            Checklist Items
+        </button>
+        <button onclick="switchTab('layout')" id="tab-layout" class="tab-btn"
+            style="padding: 1rem; border: none; background: none; font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid transparent; cursor: pointer;">
+            Facility Layout
+        </button>
+    </div>
+
+    <!-- SECTION 1: CHECKLIST ITEMS -->
+    <div id="section-checklist">
+        {% for category in categories %}
+        <div class="card" style="margin-bottom: 2rem; overflow: hidden;">
+            <div
+                style="padding: 1rem 1.5rem; background: var(--surface-ground); border-bottom: 1px solid var(--surface-border); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <h3
+                        style="font-size: 1rem; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">
+                        {{ category.name }}</h3>
+                    <span
+                        style="font-size: 0.8rem; color: var(--text-secondary); background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 12px; white-space: nowrap;">
+                        {{ category.items.count }} items
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+                    <button type="button" data-id="{{ category.id }}" data-name="{{ category.name|escapejs }}"
+                        onclick="openEditCategoryModal(this.dataset)"
+                        style="background: white; border: 1px solid var(--primary-color); color: var(--primary-color); cursor: pointer; padding: 0.4rem 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"
+                        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='white'"
+                        title="Edit Category">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        <span style="font-size: 0.85rem; font-weight: 600;">Edit</span>
+                    </button>
+                    <button type="button" onclick="confirmDelete('{{ category.id }}', 'category')"
+                        style="background: white; border: 1px solid var(--danger-color); color: var(--danger-color); cursor: pointer; padding: 0.4rem 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"
+                        onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='white'"
+                        title="Delete Category">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2">
+                            </path>
+                        </svg>
+                        <span style="font-size: 0.85rem; font-weight: 600;">Delete</span>
+                    </button>
+                </div>
+            </div>
+
+            <div style="padding: 0;">
+                {% for item in category.items.all %}
+                <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; align-items: center; justify-content: space-between; transition: background 0.2s;"
+                    onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='white'">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; color: var(--text-main); font-size: 1rem;">{{ item.text }}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Type: {{item.get_item_type_display }}</span>
+                    </div>
+
+                    <div style="display: flex; align-items: center;">
+                        <button type="button" onclick="confirmDelete('{{ item.id }}', 'item')"
+                            style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; padding: 0.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem;"
+                            onmouseover="this.style.background='#fee2e2'"
+                            onmouseout="this.style.background='transparent'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2">
+                                </path>
+                            </svg>
+                            <span style="font-size: 0.9rem;">Remove</span>
+                        </button>
+
+                        <button type="button" data-id="{{ item.id }}" data-text="{{ item.text|escapejs }}"
+                            data-type="{{ item.item_type }}" data-category="{{ category.id }}"
+                            onclick="openEditItemModal(this.dataset)"
+                            style="background: transparent; border: none; color: var(--primary-color); cursor: pointer; padding: 0.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem;"
+                            onmouseover="this.style.background='#e0f2fe'"
+                            onmouseout="this.style.background='transparent'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span style="font-size: 0.9rem;">Edit</span>
+                        </button>
+                    </div>
+                </div>
+
+                {% empty %}
+                <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                    No items in this category.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- SECTION 2: FACILITY LAYOUT (GRID SECTIONS) -->
+    <div id="section-layout" style="display: none;">
+
+
+        <div class="card">
+            <div style="padding: 0;">
+                {% for section in grid_sections %}
+                <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; align-items: center; justify-content: space-between; transition: background 0.2s;"
+                    onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='white'">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div
+                            style="width: 40px; height: 40px; background: #e0f2fe; color: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <span style="font-weight: 700;">{{ section.prefix }}</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 600; color: var(--text-main); font-size: 1rem;">{{ section.name}}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                                {{ section.rows }} Rows x {{ section.cols }} Cols • Icon: {{ section.get_icon_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center;">
+                        <button type="button" onclick="confirmDelete('{{ section.id }}', 'grid')"
+                            style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; padding: 0.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem;"
+                            onmouseover="this.style.background='#fee2e2'"
+                            onmouseout="this.style.background='transparent'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2">
+                                </path>
+                            </svg>
+                            <span style="font-size: 0.9rem;">Remove</span>
+                        </button>
+
+                        <button type="button" data-id="{{ section.id }}" data-name="{{ section.name|escapejs }}"
+                            data-rows="{{ section.rows }}" data-cols="{{ section.cols }}"
+                            data-total-items="{{ section.total_items|default_if_none:'' }}"
+                            data-prefix="{{ section.prefix }}" data-icon="{{ section.icon }}"
+                            onclick="openEditGridModal(this.dataset)"
+                            style="background: transparent; border: none; color: var(--primary-color); cursor: pointer; padding: 0.5rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem;"
+                            onmouseover="this.style.background='#e0f2fe'"
+                            onmouseout="this.style.background='transparent'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span style="font-size: 0.9rem;">Edit</span>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="padding: 3rem; text-align: center; color: var(--text-secondary);">
+                    No layout sections defined. Add a room to get started.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Add Item Modal -->
+<dialog id="addItemModal">
+    <div class="modal-header">
+        <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0;" id="itemModalTitle">Add New Checklist Item</h5>
+        <button type="button" onclick="closeAddItemModal()"
+            style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;">✕
+        </button>
+    </div>
+
+    <form method="post" id="itemForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="item_form_action" value="add">
+        <input type="hidden" name="item_id" id="item_id">
+
+        <div class="modal-body">
+            <div style="margin-bottom: 1.25rem;">
+                <label
+                    style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Category</label>
+                <select name="category" required class="form-select"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); background: white;">
+                    <option value="">-- Select Category --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Item Name /
+                    Component</label>
+                <input type="text" name="text" required class="form-control" placeholder="e.g. Fire Extinguisher"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Response
+                    Type</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    {% for type_code, type_label in question_types %}
+                    <label
+                        style="display: flex; flex-direction: column; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;"
+                        onmouseover="this.style.borderColor='var(--primary-color)'; this.style.background='var(--primary-bg)'"
+                        onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='var(--surface-border)'; this.style.background='white'}">
+
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            <input type="radio" name="type" value="{{ type_code }}" required
+                                style="accent-color: var(--primary-color);">
+                            <span style="font-weight: 600; font-size: 0.9rem;">{{ type_label }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeAddItemModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="itemSubmitBtn">Add Item</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Add Grid Section Modal -->
+<dialog id="addGridModal">
+    <div class="modal-header">
+        <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0;" id="gridModalTitle">Add Room / Section</h5>
+        <button type="button" onclick="closeAddGridModal()"
+            style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;">
+            ✕
+        </button>
+    </div>
+
+    <form method="post" id="gridForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="grid_form_action" value="add_grid">
+        <input type="hidden" name="section_id" id="grid_section_id">
+
+        <div class="modal-body">
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Section
+                    Name</label>
+                <input type="text" name="name" required placeholder="e.g. Server Room"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                <div>
+                    <label
+                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Rows</label>
+                    <input type="number" name="rows" value="3" min="1" max="100" required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Cols</label>
+                    <input type="number" name="cols" value="3" min="1" max="20" required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Total Items
+                    (Optional)</label>
+                <input type="number" name="total_items" min="1"
+                    placeholder="Override strict rows x cols (e.g. 10 items in 3 cols)"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Seat
+                    Prefix</label>
+                <input type="text" name="prefix" value="S" maxlength="3" required placeholder="e.g. S (for S1, S2...)"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Icon
+                    Type</label>
+                <select name="icon" required class="form-select"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); background: white;">
+                    {% for code, label in icon_choices %}
+                    <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeAddGridModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="gridSubmitBtn">Create Section</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Add Category Modal -->
+<dialog id="addCategoryModal">
+    <div class="modal-header">
+        <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0;">Add New Category</h5>
+        <button type="button" onclick="closeAddCategoryModal()"
+            style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_category">
+
+        <div class="modal-body">
+            <!-- Category Name -->
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Category
+                    Name</label>
+                <input type="text" name="name" required class="form-control" placeholder="e.g. Server Room Checks"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeAddCategoryModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Category</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Edit Category Modal -->
+<dialog id="editCategoryModal">
+    <div class="modal-header">
+        <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0;">Edit Category</h5>
+        <button type="button" onclick="closeEditCategoryModal()"
+            style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="edit_category">
+        <input type="hidden" name="category_id" id="edit_category_id">
+
+        <div class="modal-body">
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Category
+                    Name</label>
+                <input type="text" name="name" id="edit_category_name" required class="form-control"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeEditCategoryModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Delete Confirmation Dialog -->
+<dialog id="deleteConfirmModal">
+    <div class="modal-header">
+        <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0; color: var(--danger-color);">Confirm Deletion</h5>
+        <button type="button" onclick="closeDeleteModal()"
+            style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;">✕</button>
+    </div>
+    <div class="modal-body">
+        <p style="margin: 0; color: var(--text-main);">Are you sure you want to remove this? This action cannot be
+            undone.</p>
+    </div>
+    <div class="modal-footer">
+        <form method="post" id="deleteForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" id="delete_action" value="delete">
+            <!-- Dynamic ID input -->
+            <input type="hidden" name="item_id" id="delete_item_id">
+            <input type="hidden" name="section_id" id="delete_section_id">
+            <input type="hidden" name="category_id" id="delete_category_id">
+
+            <button type="button" class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary"
+                style="background: var(--danger-color); box-shadow: none; border: none;">Remove</button>
+        </form>
+    </div>
+</dialog>
+
+<script>
+    // Tab Logic
+    function switchTab(tab) {
+        // Update Buttons
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.color = 'var(--text-secondary)';
+            b.style.borderBottomColor = 'transparent';
+        });
+        document.getElementById('tab-' + tab).style.color = 'var(--text-main)';
+        document.getElementById('tab-' + tab).style.borderBottomColor = 'var(--primary-color)';
+
+        // Show Section
+        document.getElementById('section-checklist').style.display = tab === 'checklist' ? 'block' : 'none';
+        document.getElementById('section-layout').style.display = tab === 'layout' ? 'block' : 'none';
+
+        // Show/Hide Add Buttons based on tab
+        const btnAddItem = document.getElementById('btnAddItem');
+        const btnAddGrid = document.getElementById('btnAddGrid');
+
+        if (btnAddItem) btnAddItem.style.display = tab === 'checklist' ? 'inline-flex' : 'none';
+        if (btnAddGrid) btnAddGrid.style.display = tab === 'layout' ? 'inline-flex' : 'none';
+    }
+
+    // Add Category Modal Logic
+    const addCategoryModal = document.getElementById('addCategoryModal');
+
+    function openAddCategoryModal() {
+        addCategoryModal.showModal();
+    }
+
+    function closeAddCategoryModal() {
+        addCategoryModal.close();
+    }
+
+    // Close Add Category Modal on backdrop click
+    addCategoryModal.addEventListener('click', (event) => {
+        if (event.target === addCategoryModal) {
+            closeAddCategoryModal();
+        }
+    });
+
+    // Edit Category Modal Logic
+    const editCategoryModal = document.getElementById('editCategoryModal');
+
+    function openEditCategoryModal(data) {
+        document.getElementById('edit_category_id').value = data.id;
+        document.getElementById('edit_category_name').value = data.name;
+        editCategoryModal.showModal();
+    }
+
+    function closeEditCategoryModal() {
+        editCategoryModal.close();
+    }
+
+    editCategoryModal.addEventListener('click', (event) => {
+        if (event.target === editCategoryModal) closeEditCategoryModal();
+    });
+
+    // Modal Logic
+    const addItemModal = document.getElementById('addItemModal');
+    const addGridModal = document.getElementById('addGridModal');
+    const deleteModal = document.getElementById('deleteConfirmModal');
+
+    function openAddItemModal() {
+        document.getElementById('itemForm').reset();
+        document.getElementById('item_form_action').value = 'add';
+        document.getElementById('item_id').value = '';
+        document.getElementById('itemModalTitle').innerText = 'Add New Checklist Item';
+        document.getElementById('itemSubmitBtn').innerText = 'Add Item';
+        addItemModal.showModal();
+    }
+
+    function openEditItemModal(data) {
+        document.getElementById('item_form_action').value = 'edit';
+        document.getElementById('item_id').value = data.id;
+
+        // Populate fields
+        document.querySelector('#addItemModal select[name="category"]').value = data.category;
+        document.querySelector('#addItemModal input[name="text"]').value = data.text;
+
+        // Handle Radio Button
+        const radio = document.querySelector(`#addItemModal input[name="type"][value="${data.type}"]`);
+        if (radio) radio.checked = true;
+
+        document.getElementById('itemModalTitle').innerText = 'Edit Checklist Item';
+        document.getElementById('itemSubmitBtn').innerText = 'Save Changes';
+        addItemModal.showModal();
+    }
+
+    function closeAddItemModal() { addItemModal.close(); }
+
+    function openAddGridModal() {
+        // Reset Form
+        document.getElementById('gridForm').reset();
+        document.getElementById('grid_form_action').value = 'add_grid';
+        document.getElementById('grid_section_id').value = '';
+        document.getElementById('gridModalTitle').innerText = 'Add Room / Section';
+        document.getElementById('gridSubmitBtn').innerText = 'Create Section';
+        addGridModal.showModal();
+    }
+
+    function openEditGridModal(data) {
+        // Populate Form
+        document.getElementById('grid_form_action').value = 'edit_grid';
+        document.getElementById('grid_section_id').value = data.id;
+        document.querySelector('#addGridModal input[name="name"]').value = data.name;
+        document.querySelector('#addGridModal input[name="rows"]').value = data.rows;
+        document.querySelector('#addGridModal input[name="cols"]').value = data.cols;
+        // Handle dataset camelCase vs direct object property
+        document.querySelector('#addGridModal input[name="total_items"]').value = data.totalItems || data.total_items || '';
+        document.querySelector('#addGridModal input[name="prefix"]').value = data.prefix;
+        document.querySelector('#addGridModal select[name="icon"]').value = data.icon;
+
+        document.getElementById('gridModalTitle').innerText = 'Edit Room / Section';
+        document.getElementById('gridSubmitBtn').innerText = 'Save Changes';
+        addGridModal.showModal();
+    }
+
+    function closeAddGridModal() { addGridModal.close(); }
+
+    function confirmDelete(id, type) {
+        const actionInput = document.getElementById('delete_action');
+        const itemInput = document.getElementById('delete_item_id');
+        const sectionInput = document.getElementById('delete_section_id');
+        const categoryInput = document.getElementById('delete_category_id');
+
+        // Reset
+        itemInput.value = '';
+        sectionInput.value = '';
+        categoryInput.value = '';
+
+        if (type === 'item') {
+            actionInput.value = 'delete';
+            itemInput.value = id;
+        } else if (type === 'grid') {
+            actionInput.value = 'delete_grid';
+            sectionInput.value = id;
+        } else if (type === 'category') {
+            actionInput.value = 'delete_category';
+            categoryInput.value = id;
+        }
+
+        deleteModal.showModal();
+    }
+    function closeDeleteModal() { deleteModal.close(); }
+
+    // Close on backdrop
+    [addItemModal, addGridModal, deleteModal].forEach(m => {
+        m.addEventListener('click', e => {
+            if (e.target === m) m.close();
+        });
+    });
+</script>
+{% endblock %}

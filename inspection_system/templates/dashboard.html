@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <style>
+        .crystal-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .crystal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            transition: 0.5s;
+            transform: skewX(-15deg);
+        }
+
+        .crystal-card:hover::before {
+            left: 100%;
+        }
+
+        .crystal-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .crystal-card.blue {
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1), inset 0 0 20px rgba(59, 130, 246, 0.05);
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .crystal-card.blue:hover {
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.2), inset 0 0 10px rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .crystal-card.orange {
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.1), inset 0 0 20px rgba(249, 115, 22, 0.05);
+            border-bottom: 2px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .crystal-card.orange:hover {
+            box-shadow: 0 15px 30px rgba(249, 115, 22, 0.2), inset 0 0 10px rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.5);
+        }
+
+        .crystal-card.green {
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1), inset 0 0 20px rgba(34, 197, 94, 0.05);
+            border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .crystal-card.green:hover {
+            box-shadow: 0 15px 30px rgba(34, 197, 94, 0.2), inset 0 0 10px rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .crystal-card.purple {
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.1), inset 0 0 20px rgba(124, 58, 237, 0.05);
+            border-bottom: 2px solid rgba(124, 58, 237, 0.3);
+        }
+
+        .crystal-card.purple:hover {
+            box-shadow: 0 15px 30px rgba(124, 58, 237, 0.2), inset 0 0 10px rgba(124, 58, 237, 0.1);
+            border-color: rgba(124, 58, 237, 0.5);
+        }
+    </style>
+    <!-- Welcome Section -->
+    <div
+        style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1rem;">
+        <div>
+            <h1
+                style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.25rem; letter-spacing: -0.025em;">
+                Dashboard</h1>
+            <p style="color: var(--primary-color); font-weight: 300;">Welcome back, <span
+                    style="color: var(--primary-color); font-weight: 700;">{{ user.username|title }}!</span> Here's
+                what's happening today.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <div
+                style="background-color: #fff7ed; color: #ea580c; border: 1px solid #fdba74; padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                {% now "l, F j" %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Card 1 -->
+        <div class="card crystal-card blue" style="display: flex; align-items: center; gap: 1rem;">
+            <div
+                style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background-color: var(--info-bg); color: var(--info-color);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Total Inspections</p>
+                <p style="color: var(--text-main); font-size: 1.5rem; font-weight: 700; line-height: 1;">
+                    {{total_inspections }}</p>
+            </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="card crystal-card orange" style="display: flex; align-items: center; gap: 1rem;">
+            <div
+                style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background-color: var(--warning-bg); color: var(--warning-color);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Pending Actions</p>
+                <p style="color: var(--text-main); font-size: 1.5rem; font-weight: 700; line-height: 1;">
+                    {{pending_actions }}</p>
+            </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="card crystal-card green" style="display: flex; align-items: center; gap: 1rem;">
+            <div
+                style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background-color: var(--success-bg); color: var(--success-color);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">Active Users</p>
+                <p style="color: var(--text-main); font-size: 1.5rem; font-weight: 700; line-height: 1;">
+                    {{active_users}}</p>
+            </div>
+        </div>
+        <!-- Card 4 -->
+        <div class="card crystal-card purple" style="display: flex; align-items: center; gap: 1rem;">
+            <div
+                style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background-color: #f5f3ff; color: #7c3aed;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;">System Health</p>
+                <p style="color: var(--text-main); font-size: 1.5rem; font-weight: 700; line-height: 1;">
+                    {{system_health}}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Quick Links -->
+    {% if user.is_superuser %}
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <a href="{% url 'authentication:vehicle_list' %}" class="card"
+            style="padding: 1.5rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div
+                style="background: #e0f2fe; color: #0284c7; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="3" width="15" height="13"></rect>
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+            </div>
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--text-main);">Manage Vehicles</h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Add & assign vehicles</p>
+            </div>
+        </a>
+
+        <a href="{% url 'authentication:district_list' %}" class="card"
+            style="padding: 1.5rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div
+                style="background: #fdf4ff; color: #a855f7; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+            </div>
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--text-main);">Manage Districts</h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Add locations</p>
+            </div>
+        </a>
+
+
+
+        <a href="{% url 'authentication:user_list' %}" class="card"
+            style="padding: 1.5rem; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;">
+            <div
+                style="background: #ecfccb; color: #65a30d; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--text-main);">Manage Users</h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Team & permissions</p>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+    <div class="card" style="margin-bottom: 2rem; padding: 0; overflow: hidden;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border);">
+            <h2
+                style="font-size: 1.1rem; font-weight: 600; color: var(--primary-color); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Project Inspections Overview
+            </h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem;">Project Name</th>
+                        <th>Total Inspections</th>
+                        <th>Major Complaints</th>
+                        <th style="text-align: right; padding-right: 1.5rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in project_data %}
+                    <tr>
+                        <td style="padding-left: 1.5rem; font-weight: 600; color: var(--text-main);">
+                            {{item.project.name}}</td>
+                        <td style="color: var(--text-secondary);">{{ item.total_inspections }}</td>
+                        <td>
+                            {% if item.complaints > 0 %}
+                            <span class="badge badge-danger">{{ item.complaints }} Issues</span>
+                            {% else %}
+                            <span class="badge badge-success">All Good</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right; padding-right: 1.5rem;">
+                            <a href="{% if item.dashboard_url != '#' %}{% url item.dashboard_url %}{% else %}#{% endif %}"
+                                class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">View
+                                Details</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No
+                            inspection data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div
+            style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
+            <h2
+                style="font-size: 1.1rem; font-weight: 600; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Recent Activity
+            </h2>
+            <a href="#"
+                style="font-size: 0.875rem; font-weight: 600; color: var(--primary-color); text-decoration: none;">View
+                All</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem;">User</th>
+                        <th>Action</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th style="padding-right: 1.5rem;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in recent_activities %}
+                    <tr>
+                        <td style="padding-left: 1.5rem; font-weight: 600; color: var(--text-main);">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div
+                                    style="width: 32px; height: 32px; border-radius: 50%; background: #e7e5e4; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">
+                                    {{ activity.user|slice:":2"|upper }}
+                                </div>
+                                {{ activity.user }}
+                            </div>
+                        </td>
+                        <td>{{ activity.action }}</td>
+                        <td style="color: var(--text-secondary);">{{ activity.time }}</td>
+                        <td>
+                            <span class="badge badge-{{ activity.status }}">
+                                {{ activity.status|title }}
+                            </span>
+                        </td>
+                        <td style="text-align: right; padding-right: 1.5rem;">
+                            <button style="background: none; border: none; cursor: pointer; color: var(--text-muted);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="12" cy="5" r="1"></circle>
+                                    <circle cx="12" cy="19" r="1"></circle>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

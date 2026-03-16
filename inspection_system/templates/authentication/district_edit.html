@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit District | Inspection Tool{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 600px;">
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Edit District
+        </h1>
+        <p style="color: var(--text-secondary);">Update district spelling or name.</p>
+    </div>
+
+    <div class="card" style="padding: 2rem;">
+        <form method="post">
+            {% csrf_token %}
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">District
+                    Name</label>
+                <input type="text" name="name" value="{{ district.name }}" required
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <a href="{% url 'authentication:district_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update District</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

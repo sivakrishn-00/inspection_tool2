@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login Audit Log{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 2rem;">
+    <!-- Header Area -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+        <div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Access
+                Audit Logs</h1>
+            <p style="color: var(--text-secondary); margin: 0;">Comprehensive history of successful system logins.</p>
+        </div>
+        <div>
+            <span class="badge"
+                style="background: var(--primary-bg); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;">
+                {{ records.paginator.count }} Total Records
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card"
+        style="border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); background: #fff;">
+
+            {% if records %}
+            <div class="table-responsive">
+                <table class="table" style="width: 100%; margin: 0; border-collapse: collapse;">
+                    <thead>
+                        <tr
+                            style="background-color: #f8fafc; text-align: left; border-bottom: 2px solid var(--surface-border);">
+                            <th
+                                style="padding: 1rem; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Date & Time</th>
+                            <th
+                                style="padding: 1rem; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                User</th>
+                            <th
+                                style="padding: 1rem; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Logout Time</th>
+                            <th
+                                style="padding: 1rem; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                IP Address</th>
+                            <th
+                                style="padding: 1rem; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Device / Browser Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr style="border-bottom: 1px solid var(--surface-border); transition: background-color 0.2s;"
+                            onmouseover="this.style.backgroundColor='#f8fafc'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+
+                            <!-- Timestamp -->
+                            <td style="padding: 1rem; color: var(--text-main); vertical-align: middle;">
+                                <div style="font-weight: 600;">{{ record.timestamp|date:"M d, Y" }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ record.timestamp|time:"h:i A" }}</div>
+                            </td>
+
+                            <!-- User info -->
+                            <td style="padding: 1rem; vertical-align: middle;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div
+                                        style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-bg); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem;">
+                                        {{ record.user.username|make_list|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--text-main);">{{ record.user.username }}</div>
+                                        {% if record.user.profile.emp_id %}
+                                        <div style="font-size: 0.8rem; color: var(--text-secondary);">ID: {{ record.user.profile.emp_id }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Logout Timestamp -->
+                            <td style="padding: 1rem; color: var(--text-main); vertical-align: middle;">
+                                {% if record.logout_timestamp %}
+                                <div style="font-weight: 600;">{{ record.logout_timestamp|date:"M d, Y" }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ record.logout_timestamp|time:"h:i A" }}</div>
+                                {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">Active
+                                    Session</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- IP Address -->
+                            <td style="padding: 1rem; vertical-align: middle;">
+                                <span
+                                    style="font-family: monospace; background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem; color: #475569;">
+                                    {{ record.ip_address|default:"Unknown IP" }}
+                                </span>
+                            </td>
+
+                            <!-- User Agent -->
+                            <td style="padding: 1rem; vertical-align: middle; max-width: 300px;">
+                                <div
+                                    style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; word-break: break-word;">
+                                    {{ record.user_agent|default:"Unknown Device" }}
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            {% if records.has_other_pages %}
+            <div style="padding: 1.5rem; border-top: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Showing {{ records.start_index }} to {{ records.end_index }} of {{ records.paginator.count }} records
+                </div>
+                <div style="display: flex; gap: 0.25rem;">
+                    {% if records.has_previous %}
+                    <a href="?page=1" style="padding: 0.5rem 0.75rem; border: 1px solid var(--surface-border); border-radius: 6px; background: #fff; color: var(--text-main); text-decoration: none; font-size: 0.85rem; transition: all 0.2s;">&laquo; First</a>
+                    <a href="?page={{ records.previous_page_number }}" style="padding: 0.5rem 0.75rem; border: 1px solid var(--surface-border); border-radius: 6px; background: #fff; color: var(--text-main); text-decoration: none; font-size: 0.85rem; transition: all 0.2s;">Previous</a>
+                    {% endif %}
+                    
+                    <span style="padding: 0.5rem 1rem; border: 1px solid var(--primary-color); border-radius: 6px; background: var(--primary-color); color: white; font-size: 0.85rem; font-weight: 500;">
+                        Page {{ records.number }} of {{ records.paginator.num_pages }}
+                    </span>
+                    
+                    {% if records.has_next %}
+                    <a href="?page={{ records.next_page_number }}" style="padding: 0.5rem 0.75rem; border: 1px solid var(--surface-border); border-radius: 6px; background: #fff; color: var(--text-main); text-decoration: none; font-size: 0.85rem; transition: all 0.2s;">Next</a>
+                    <a href="?page={{ records.paginator.num_pages }}" style="padding: 0.5rem 0.75rem; border: 1px solid var(--surface-border); border-radius: 6px; background: #fff; color: var(--text-main); text-decoration: none; font-size: 0.85rem; transition: all 0.2s;">Last &raquo;</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div style="text-align: center; padding: 4rem 2rem;">
+                <div
+                    style="width: 64px; height: 64px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                </div>
+                <h3 style="margin: 0 0 0.5rem; color: var(--text-main); font-size: 1.25rem;">No Login Records Yet</h3>
+                <p style="color: var(--text-secondary); margin: 0; max-width: 400px; margin: 0 auto;">
+                    As users log in to the system, their access trails will appear here automatically.
+                </p>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
