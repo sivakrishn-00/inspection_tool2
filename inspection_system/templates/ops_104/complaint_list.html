@@ -176,8 +176,38 @@
     {% endif %}
 </div>
 
+<!-- Re-raise Modal -->
+<dialog id="reRaiseModal" style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
+    <div class="modal-header">
+        <h3 style="font-weight: 700;">Re-raise Complaint</h3>
+        <button onclick="document.getElementById('reRaiseModal').close()"
+            style="background:none; border:none; cursor:pointer; color:var(--text-secondary);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    <form id="reRaiseForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Re-raise Remarks</label>
+                <textarea name="remarks" class="form-control"
+                    style="width:100%; min-height:100px; padding:0.5rem; border:1px solid var(--surface-border); border-radius:var(--radius-md);"
+                    required placeholder="Explain why this issue needs to be re-raised..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="document.getElementById('reRaiseModal').close()"
+                class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-danger">Re-raise Issue</button>
+        </div>
+    </form>
+</dialog>
+
 <!-- Resolve Modal -->
-<dialog id="resolveModal">
+<dialog id="resolveModal" style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
     <div class="modal-header">
         <h3 style="font-weight: 700;">Resolve Complaint</h3>
         <button onclick="document.getElementById('resolveModal').close()"
@@ -213,7 +243,7 @@
 </dialog>
 
 <!-- Close Modal -->
-<dialog id="closeModal">
+<dialog id="closeModal" style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
     <div class="modal-header">
         <h3 style="font-weight: 700;">Close Complaint</h3>
         <button onclick="document.getElementById('closeModal').close()"

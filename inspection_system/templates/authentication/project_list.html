@@ -69,12 +69,11 @@
 
 <!-- Add Project Modal -->
 <dialog id="addProjectModal"
-    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white;">
-    <div
-        style="padding: 1.5rem; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-size: 1.1rem; font-weight: 600;">Add New Project</h3>
-        <button onclick="document.getElementById('addProjectModal').close()"
-            style="background: none; border: none; cursor: pointer;">
+    style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
+    <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin: 0;">Add New Project</h3>
+        <button type="button" onclick="document.getElementById('addProjectModal').close()"
+            style="background: none; border: none; cursor: pointer; color: var(--text-secondary);">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -82,21 +81,23 @@
             </svg>
         </button>
     </div>
-    <form method="post" action="{% url 'authentication:project_create' %}" style="padding: 1.5rem;">
+    <form method="post" action="{% url 'authentication:project_create' %}" style="display: flex; flex-direction: column;">
         {% csrf_token %}
-        <div style="margin-bottom: 1rem;">
-            <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Project
-                Name</label>
-            <input type="text" name="name" required
-                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+        <div class="modal-body" style="overflow-y: auto; max-height: 60vh;">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Project
+                    Name</label>
+                <input type="text" name="name" required
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Description</label>
+                <textarea name="description" rows="3"
+                    style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);"></textarea>
+            </div>
         </div>
-        <div style="margin-bottom: 1.5rem;">
-            <label
-                style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Description</label>
-            <textarea name="description" rows="3"
-                style="width: 100%; padding: 0.75rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md);"></textarea>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+        <div class="modal-footer">
             <button type="button" onclick="document.getElementById('addProjectModal').close()"
                 class="btn btn-outline">Cancel</button>
             <button type="submit" class="btn btn-primary">Create Project</button>

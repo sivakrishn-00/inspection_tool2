@@ -138,7 +138,7 @@
 </div>
 
 <!-- Add User Modal -->
-<dialog id="addUserModal" style="width: 100%; max-width: 500px;">
+<dialog id="addUserModal" style="width: 100%; max-width: 500px; overflow: visible;">
     <!-- Fixed Header -->
     <div class="modal-header">
         <h3 style="font-size: 1.1rem; font-weight: 600; margin: 0;">Add New User</h3>
@@ -153,9 +153,20 @@
     </div>
 
     <!-- Scrollable Body and Footer wrapped in Form -->
-    <form method="post" action="{% url 'authentication:user_create' %}" style="display: contents;">
+    <form method="post" action="{% url 'authentication:user_create' %}" style="display: flex; flex-direction: column; overflow: visible;">
         {% csrf_token %}
-        <div class="modal-body">
+        <div class="modal-body" style="overflow-y: auto; max-height: 60vh;">
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Assigned
+                    Project</label>
+                <select name="project"
+                    style="width: 100%; padding: 0.6rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); font-size: 0.9rem;">
+                    <option value="">-- Select Project --</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div style="margin-bottom: 0.75rem;">
                 <label
                     style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Username</label>
@@ -180,18 +191,7 @@
                 <input type="password" name="password" required
                     style="width: 100%; padding: 0.6rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); font-size: 0.9rem;">
             </div>
-            <div style="margin-bottom: 0.75rem;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Assigned
-                    Project</label>
-                <select name="project"
-                    style="width: 100%; padding: 0.6rem; border: 1px solid var(--surface-border); border-radius: var(--radius-md); font-size: 0.9rem;">
-                    <option value="">-- Select Project --</option>
-                    {% for project in projects %}
-                    <option value="{{ project.id }}">{{ project.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div style="margin-bottom: 0;">
+            <div style="margin-bottom: 5rem;"> <!-- Space for Role dropdown -->
                 <label
                     style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Role</label>
                 <select name="role"

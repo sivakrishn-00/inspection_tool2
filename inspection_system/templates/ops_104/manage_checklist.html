@@ -135,7 +135,7 @@
 </div>
 
 <!-- Add Item Modal (Native Dialog) -->
-<dialog id="addItemModal">
+<dialog id="addItemModal" style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
     <div class="modal-header">
         <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0;">Add New Item</h5>
         <button type="button" onclick="closeAddItemModal()"
@@ -148,11 +148,11 @@
         </button>
     </div>
 
-    <form method="post">
+    <form method="post" style="display: flex; flex-direction: column;">
         {% csrf_token %}
         <input type="hidden" name="action" value="add">
 
-        <div class="modal-body">
+        <div class="modal-body" style="overflow-y: auto; max-height: 60vh;">
             <!-- Category Selection -->
             <div style="margin-bottom: 1.25rem;">
                 <label
@@ -175,7 +175,7 @@
             </div>
 
             <!-- Question Type -->
-            <div style="margin-bottom: 1rem;">
+            <div style="margin-bottom: 5rem;"> <!-- Extra space for radio/type selection or next potential fields -->
                 <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Question
                     Type</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
@@ -212,7 +212,7 @@
 
 
 <!-- Add Category Modal -->
-<dialog id="addCategoryModal">
+<dialog id="addCategoryModal" style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
     <div class="modal-header">
         <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0;">Add New Category</h5>
         <button type="button" onclick="closeAddCategoryModal()"
@@ -225,11 +225,11 @@
         </button>
     </div>
 
-    <form method="post">
+    <form method="post" style="display: flex; flex-direction: column;">
         {% csrf_token %}
         <input type="hidden" name="action" value="add_category">
 
-        <div class="modal-body">
+        <div class="modal-body" style="overflow-y: auto; max-height: 40vh;">
             <!-- Category Name -->
             <div style="margin-bottom: 1.25rem;">
                 <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Category
@@ -248,7 +248,7 @@
 
 
 <!-- Edit Category Modal -->
-<dialog id="editCategoryModal">
+<dialog id="editCategoryModal" style="padding: 0; border: none; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 500px; background: white; overflow: visible;">
     <div class="modal-header">
         <h5 style="font-weight: 700; font-size: 1.1rem; margin: 0;">Edit Category</h5>
         <button type="button" onclick="closeEditCategoryModal()"
@@ -260,12 +260,12 @@
             </svg>
         </button>
     </div>
-    <form method="post">
+    <form method="post" style="display: flex; flex-direction: column;">
         {% csrf_token %}
         <input type="hidden" name="action" value="edit_category">
         <input type="hidden" name="category_id" id="edit_category_id">
 
-        <div class="modal-body">
+        <div class="modal-body" style="overflow-y: auto; max-height: 40vh;">
             <div style="margin-bottom: 1.25rem;">
                 <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Category
                     Name</label>
